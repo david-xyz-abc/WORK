@@ -1,8 +1,8 @@
 #!/bin/bash
 # Beginner-Friendly Installer for Self Hosted Google Drive (DriveDAV)
-# This script installs Apache, PHP, required modules, downloads your PHP files
+# This script installs Nginx, PHP, required modules, downloads your PHP files
 # from GitHub, creates necessary folders, sets proper permissions, adjusts PHP's size limits
-# for both CLI and Apache php.ini files, and verifies both.
+# for both CLI and PHP-FPM php.ini files, and verifies both.
 # Run this as root (e.g., sudo bash install.sh)
 #
 # Your PHP files are hosted at:
@@ -27,7 +27,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Set the base URL where your PHP files are hosted (updated to new repo).
-BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/WORK/main"
+BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main"
 
 # List of required PHP files (includes register.php)
 FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php")
@@ -36,9 +36,9 @@ FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php"
 echo "Updating package lists..."
 apt-get update
 
-# Install Apache, PHP, and required PHP modules along with wget and curl for verification
-echo "Installing Apache, PHP, and required modules..."
-apt-get install -y apache2 php libapache2-mod-php php-cli php-json php-mbstring php-xml wget curl
+# Install Nginx, PHP, and required PHP modules along with wget and curl for verification
+echo "Installing Nginx, PHP, and required modules..."
+apt-get install -y nginx php-fpm php-json php-mbstring php-xml wget curl
 
 # Define application directories
 APP_DIR="/var/www/html/selfhostedgdrive"
@@ -57,7 +57,7 @@ for file in "${FILES[@]}"; do
   wget -q -O "$APP_DIR/$file" "$FILE_URL" || { echo "ERROR: Failed to download ${file}"; exit 1; }
 done
 
-# Create users.json if it doesn’t exist
+# Create users.json if it doesn't exist
 echo "Setting up users.json at $USERS_JSON..."
 if [ ! -f "$USERS_JSON" ]; then
   echo "{}" > "$USERS_JSON"
@@ -78,29 +78,28 @@ chmod -R 775 "/var/www/html/webdav"  # 775 to allow group write access
 # Determine PHP version
 PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
 
-# Locate the php.ini files for CLI and Apache
+# Locate the php.ini files for CLI and PHP-FPM
 CLI_PHP_INI="/etc/php/$PHP_VERSION/cli/php.ini"
-APACHE_PHP_INI="/etc/php/$PHP_VERSION/apache2/php.ini"
+FPM_PHP_INI="/etc/php/$PHP_VERSION/fpm/php.ini"
 
 # Check if both php.ini files exist
 if [ ! -f "$CLI_PHP_INI" ]; then
   echo "ERROR: CLI php.ini not found at $CLI_PHP_INI. Exiting."
   exit 1
 fi
-if [ ! -f "$APACHE_PHP_INI" ]; then
-  echo "WARNING: Apache php.ini not found at $APACHE_PHP_INI. Copying from CLI..."
-  mkdir -p "$(dirname "$APACHE_PHP_INI")"
-  cp "$CLI_PHP_INI" "$APACHE_PHP_INI"
+if [ ! -f "$FPM_PHP_INI" ]; then
+  echo "ERROR: PHP-FPM php.ini not found at $FPM_PHP_INI. Exiting."
+  exit 1
 fi
 
 echo "Found CLI php.ini at: $CLI_PHP_INI"
-echo "Found Apache php.ini at: $APACHE_PHP_INI"
+echo "Found PHP-FPM php.ini at: $FPM_PHP_INI"
 
 # Backup both php.ini files
 echo "Backing up CLI php.ini to ${CLI_PHP_INI}.backup..."
 cp "$CLI_PHP_INI" "${CLI_PHP_INI}.backup"
-echo "Backing up Apache php.ini to ${APACHE_PHP_INI}.backup..."
-cp "$APACHE_PHP_INI" "${APACHE_PHP_INI}.backup"
+echo "Backing up PHP-FPM php.ini to ${FPM_PHP_INI}.backup..."
+cp "$FPM_PHP_INI" "${FPM_PHP_INI}.backup"
 
 # Function to update PHP configuration
 update_php_ini() {
@@ -115,45 +114,43 @@ update_php_ini() {
 
 # Update both php.ini files
 update_php_ini "$CLI_PHP_INI"
-update_php_ini "$APACHE_PHP_INI"
-echo "PHP configuration updated for both CLI and Apache (backups saved)"
+update_php_ini "$FPM_PHP_INI"
+echo "PHP configuration updated for both CLI and PHP-FPM (backups saved)"
 
-# Enable Apache mod_rewrite (optional)
-echo "Enabling Apache mod_rewrite..."
-a2enmod rewrite
+# Enable Nginx configuration (optional)
+echo "Configuring Nginx..."
+cat << 'EOF' > /etc/nginx/sites-available/selfhostedgdrive
+server {
+    listen 80;
+    server_name localhost;
 
-# Restart Apache to apply changes
-echo "Restarting Apache..."
-systemctl restart apache2
+    root /var/www/html/selfhostedgdrive;
+    index index.php index.html index.htm;
 
-# Verify the changes for both CLI and Apache
-echo "======================================"
-echo "Verifying CLI php.ini values..."
-echo "--------------------------------------"
-php -r '
-echo "upload_max_filesize: " . ini_get("upload_max_filesize") . "\n";
-echo "post_max_size: " . ini_get("post_max_size") . "\n";
-echo "memory_limit: " . ini_get("memory_limit") . "\n";
-echo "max_execution_time: " . ini_get("max_execution_time") . "\n";
-echo "max_input_time: " . ini_get("max_input_time") . "\n";
-'
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
 
-echo "======================================"
-echo "Verifying Apache php.ini values..."
-echo "--------------------------------------"
-cat << 'EOF' > "$APP_DIR/check_ini.php"
-<?php
-echo "upload_max_filesize: " . ini_get('upload_max_filesize') . "\n";
-echo "post_max_size: " . ini_get('post_max_size') . "\n";
-echo "memory_limit: " . ini_get('memory_limit') . "\n";
-echo "max_execution_time: " . ini_get('max_execution_time') . "\n";
-echo "max_input_time: " . ini_get('max_input_time') . "\n";
-?>
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php$PHP_VERSION-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.ht {
+        deny all;
+    }
+}
 EOF
-chown www-data:www-data "$APP_DIR/check_ini.php"
-chmod 644 "$APP_DIR/check_ini.php"
-curl -s "http://localhost/selfhostedgdrive/check_ini.php" || echo "WARNING: Could not verify Apache settings."
-rm -f "$APP_DIR/check_ini.php"
+
+# Enable the Nginx site configuration
+ln -s /etc/nginx/sites-available/selfhostedgdrive /etc/nginx/sites-enabled/
+
+# Restart Nginx and PHP-FPM to apply changes
+echo "Restarting Nginx and PHP-FPM..."
+systemctl restart nginx
+systemctl restart php$PHP_VERSION-fpm
 
 # Fetch the server's public IP address
 echo "Fetching public IP address..."
