@@ -1077,11 +1077,28 @@ html, body {
   width: 100%;
   background: rgba(0, 0, 0, 0.8);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   padding: 10px;
   box-sizing: border-box;
+}
+
+.timeline {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  flex-shrink: 0;
+}
+
+.bottom-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.left-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .player-btn {
@@ -1176,6 +1193,17 @@ html, body {
 
   #videoPlayerControls {
     padding: 5px;
+  }
+
+  .timeline {
+    gap: 5px;
+  }
+
+  .bottom-controls {
+    margin-top: 5px;
+  }
+
+  .left-controls {
     gap: 5px;
   }
 
@@ -1457,14 +1485,20 @@ html, body {
       <div id="videoPlayerContainer">
         <video id="videoPlayer" preload="auto"></video>
         <div id="videoPlayerControls">
-            <input type="range" id="seekBar" value="0" min="0" step="0.1" class="seek-slider">
-            <div class="control-buttons">
-                <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
-                <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
-                <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
-                <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
-            </div>
-        </div>
+  <div class="timeline">
+    <div id="currentTime">0:00</div>
+    <input type="range" id="seekBar" value="0" min="0" step="0.1" class="seek-slider">
+    <div id="duration">0:00</div>
+  </div>
+  <div class="bottom-controls">
+    <div class="left-controls">
+      <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
+      <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
+      <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
+    </div>
+    <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
+  </div>
+</div>
       </div>
       <div id="imagePreviewContainer" style="display: none;"></div>
       <div id="iconPreviewContainer" style="display: none;"></div>
