@@ -1050,6 +1050,7 @@ html, body {
   color: var(--text-color);
 }
 
+/* --- Video Player Specific Styles --- */
 #videoPlayerContainer {
   position: relative;
   width: 100%;
