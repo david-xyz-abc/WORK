@@ -4,11 +4,6 @@
 # from GitHub, creates necessary folders, sets proper permissions, adjusts PHP's size limits
 # for both CLI and PHP-FPM php.ini files, and verifies both.
 # Run this as root (e.g., sudo bash install.sh)
-#
-# Your PHP files are hosted at:
-#   https://github.com/david-xyz-abc/drivedavfinal
-#
-# They will be fetched from the "main" branch using the raw GitHub URL.
 
 set -e  # Exit immediately if a command fails
 
@@ -26,11 +21,13 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-# Set the base URL where your PHP files are hosted (updated to new repo).
-BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main"
+# Update package lists
+echo "Updating package lists..."
+apt-get update
 
-# List of required PHP files (includes register.php)
-FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php")
+# Install Nginx and PHP with required modules
+echo "Installing Nginx and PHP with required modules..."
+apt-get install -y nginx php-fpm php-json php-mbstring php-xml wget curl
 
 # Define application directories
 APP_DIR="/var/www/html/selfhostedgdrive"
@@ -45,12 +42,16 @@ fi
 
 # Backup existing PHP files
 echo "Backing up existing PHP files..."
+FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php")
 for file in "${FILES[@]}"; do
   if [ -f "$APP_DIR/$file" ]; then
     cp "$APP_DIR/$file" "$APP_DIR/$file.bak"
     echo "Backed up $file to $file.bak"
   fi
 done
+
+# Set the base URL where your PHP files are hosted
+BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main"
 
 # Download PHP files from your GitHub repository into the application directory
 echo "Downloading PHP files from GitHub..."
@@ -61,7 +62,6 @@ for file in "${FILES[@]}"; do
 done
 
 # Create users.json if it doesn't exist
-echo "Setting up users.json at $USERS_JSON..."
 if [ ! -f "$USERS_JSON" ]; then
   echo "{}" > "$USERS_JSON"
 fi
@@ -120,7 +120,7 @@ update_php_ini "$CLI_PHP_INI"
 update_php_ini "$FPM_PHP_INI"
 echo "PHP configuration updated for both CLI and PHP-FPM (backups saved)"
 
-# Enable Nginx configuration (optional)
+# Enable Nginx configuration
 echo "Configuring Nginx..."
 cat << EOF > /etc/nginx/sites-available/selfhostedgdrive
 server {
@@ -136,7 +136,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php$PHP_VERSION-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -148,7 +148,11 @@ server {
 EOF
 
 # Enable the Nginx site configuration
-ln -s /etc/nginx/sites-available/selfhostedgdrive /etc/nginx/sites-enabled/
+if [ ! -L /etc/nginx/sites-enabled/selfhostedgdrive ]; then
+  ln -s /etc/nginx/sites-available/selfhostedgdrive /etc/nginx/sites-enabled/
+else
+  echo "Nginx site configuration already enabled."
+fi
 
 # Restart Nginx and PHP-FPM to apply changes
 echo "Restarting Nginx and PHP-FPM..."
