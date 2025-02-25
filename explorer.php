@@ -1315,6 +1315,37 @@ html, body {
 }
 
 #dropZone.active { display: flex; }
+
+#videoPlayerContainer {
+    position: relative;
+}
+
+#videoPlayer {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+#videoPlayerControls {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#bufferedBar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    z-index: 1;
+}
 </style>
 </head>
 <body>
@@ -1452,6 +1483,7 @@ html, body {
           <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
           <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
         </div>
+        <div id="bufferedBar"></div>
       </div>
       <div id="imagePreviewContainer" style="display: none;"></div>
       <div id="iconPreviewContainer" style="display: none;"></div>
@@ -1771,12 +1803,15 @@ function setupVideoPlayer(fileURL, fileName) {
     const volumeBar = document.getElementById('volumeBar');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const previewModal = document.getElementById('previewModal');
+    const bufferedBar = document.createElement('div');
+    bufferedBar.id = 'bufferedBar';
+    video.parentElement.appendChild(bufferedBar);
 
     video.src = fileURL;
     video.preload = 'auto';
     video.load();
 
-    // Ensure the video plays in full screen correctly
+    // Fullscreen functionality
     fullscreenBtn.onclick = () => {
         if (!document.fullscreenElement) {
             previewModal.requestFullscreen().catch(err => {
@@ -1787,10 +1822,6 @@ function setupVideoPlayer(fileURL, fileName) {
         }
     };
 
-    const videoKey = `video_position_${fileName}`;
-    const savedTime = localStorage.getItem(videoKey);
-    if (savedTime) video.currentTime = parseFloat(savedTime);
-
     video.onloadedmetadata = () => {
         seekBar.max = video.duration;
         duration.textContent = formatTime(video.duration);
@@ -1799,7 +1830,21 @@ function setupVideoPlayer(fileURL, fileName) {
     video.ontimeupdate = () => {
         seekBar.value = video.currentTime;
         currentTime.textContent = formatTime(video.currentTime);
-        localStorage.setItem(videoKey, video.currentTime);
+        // Update buffered bar
+        if (video.buffered.length > 0) {
+            const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+            const percentBuffered = (bufferedEnd / video.duration) * 100;
+            bufferedBar.style.width = percentBuffered + '%';
+        }
+    };
+
+    video.onprogress = () => {
+        // Update buffered bar on progress
+        if (video.buffered.length > 0) {
+            const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+            const percentBuffered = (bufferedEnd / video.duration) * 100;
+            bufferedBar.style.width = percentBuffered + '%';
+        }
     };
 
     playPauseBtn.onclick = () => {
