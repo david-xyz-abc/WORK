@@ -1038,37 +1038,29 @@ html, body {
 }
 
 #videoPlayerContainer {
-  position: relative;
-  width: 100%;
-  max-width: 800px;
-  height: auto;
-  max-height: 80vh;
-  background: var(--content-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+    position: relative;
+    width: 100%;
+    height: 100%;
 }
 
 #videoPlayer {
-  width: 100%;
-  height: auto;
-  max-height: calc(80vh - 60px);
-  display: block;
-  background: #000;
-  object-fit: contain;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border: none; /* Remove border */
 }
 
 #videoPlayerControls {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  box-sizing: border-box;
-  gap: 10px;
-  flex-shrink: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    padding: 10px;
+    border-radius: 0; /* Remove border radius */
+    z-index: 2; /* Ensure controls are above the video */
 }
 
 .player-btn {
@@ -1315,28 +1307,6 @@ html, body {
 }
 
 #dropZone.active { display: flex; }
-
-#videoPlayerContainer {
-    position: relative;
-}
-
-#videoPlayer {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-#videoPlayerControls {
-    position: absolute;
-    bottom: 10px;
-    left: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 10px;
-    border-radius: 5px;
-}
 
 #bufferedBar {
     position: absolute;
