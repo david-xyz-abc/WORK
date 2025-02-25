@@ -1441,16 +1441,19 @@ html, body {
         <button id="nextBtn" onclick="navigatePreview(1)"><i class="fas fa-arrow-right"></i></button>
       </div>
       <span id="previewClose" onclick="closePreviewModal()"><i class="fas fa-times"></i></span>
-      <div id="videoPlayerContainer" style="display: none;">
-        <video id="videoPlayer" preload="auto"></video>
+      <div id="videoPlayerContainer">
+        <video id="videoPlayer" preload="auto" controls>
+            <source src="" id="videoSource" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
         <div id="videoPlayerControls">
-          <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
-          <span id="currentTime">0:00</span>
-          <input type="range" id="seekBar" value="0" min="0" step="0.1" class="seek-slider">
-          <span id="duration">0:00</span>
-          <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
-          <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
-          <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
+            <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
+            <span id="currentTime">0:00</span>
+            <input type="range" id="seekBar" value="0" min="0" step="0.1" class="seek-slider">
+            <span id="duration">0:00</span>
+            <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
+            <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
+            <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
         </div>
         <div id="bufferedBar"></div>
       </div>
@@ -1771,19 +1774,15 @@ function setupVideoPlayer(fileURL, fileName) {
     const muteBtn = document.getElementById('muteBtn');
     const volumeBar = document.getElementById('volumeBar');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const previewModal = document.getElementById('previewModal');
-    const bufferedBar = document.createElement('div');
-    bufferedBar.id = 'bufferedBar';
-    video.parentElement.appendChild(bufferedBar);
+    const bufferedBar = document.getElementById('bufferedBar');
 
     video.src = fileURL;
-    video.preload = 'auto';
     video.load();
 
     // Fullscreen functionality
     fullscreenBtn.onclick = () => {
         if (!document.fullscreenElement) {
-            previewModal.requestFullscreen().catch(err => {
+            video.requestFullscreen().catch(err => {
                 console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
             });
         } else {
