@@ -27,7 +27,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Set the base URL where your PHP files are hosted (updated to new repo).
-BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main"
+BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/WORK/main"
 
 # List of required PHP files (includes register.php)
 FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php")
