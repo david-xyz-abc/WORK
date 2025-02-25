@@ -154,6 +154,11 @@ else
   echo "Nginx site configuration already enabled."
 fi
 
+# Set permissions for the Nginx configuration directory
+echo "Setting permissions for Nginx configuration..."
+chown -R www-data:www-data /etc/nginx/sites-available
+chown -R www-data:www-data /etc/nginx/sites-enabled
+
 # Restart Nginx and PHP-FPM to apply changes
 echo "Restarting Nginx and PHP-FPM..."
 systemctl restart nginx
