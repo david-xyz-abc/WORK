@@ -191,17 +191,18 @@ if ($currentDir === false || strpos($currentDir, $baseDir) !== 0) {
  * Calculate Storage Usage
  ************************************************/
 function getDirSize($dir) {
-    $size = 0;
-    $items = scandir($dir);
-    foreach ($items as $item) {
-        if ($item === '.' || $item === '..') continue;
-        $path = $dir . '/' . $item;
-        if (is_dir($path)) {
-            $size += getDirSize($path);
-        } else {
-            $size += filesize($path);
-        }
+    static $cache = []; // Cache for directory sizes
+    if (isset($cache[$dir])) {
+        return $cache[$dir]; // Return cached size if available
     }
+
+    $size = 0;
+    $items = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+    foreach ($items as $item) {
+        $size += $item->getSize(); // Get size of each file
+    }
+
+    $cache[$dir] = $size; // Cache the calculated size
     return $size;
 }
 
@@ -237,6 +238,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_folder'])) {
  * 4. Upload Files
  ************************************************/
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload_files'])) {
+    $totalFiles = count($_FILES['upload_files']['name']);
+    $uploadedFiles = 0; // Track the number of successfully uploaded files
+
     foreach ($_FILES['upload_files']['name'] as $i => $fname) {
         if ($_FILES['upload_files']['error'][$i] === UPLOAD_ERR_OK) {
             $tmpPath = $_FILES['upload_files']['tmp_name'][$i];
@@ -286,6 +290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload_files'])) {
 
             if (filesize($dest) >= $totalSize) {
                 log_debug("Completed upload for: $dest");
+                $uploadedFiles++;
             }
         } else {
             $errorMsg = match ($_FILES['upload_files']['error'][$i]) {
@@ -302,6 +307,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload_files'])) {
             $_SESSION['error'] = "Upload error for $fname: $errorMsg";
         }
     }
+
+    // Provide feedback on the number of uploaded files
+    if ($uploadedFiles > 0) {
+        $_SESSION['success'] = "$uploadedFiles file(s) uploaded successfully.";
+    } else {
+        $_SESSION['error'] = "No files were uploaded.";
+    }
+
     header("Location: /selfhostedgdrive/explorer.php?folder=" . urlencode($currentRel), true, 302);
     exit;
 }
@@ -1231,8 +1244,8 @@ html, body {
 }
 
 #imagePreviewContainer img {
-  max-width: 100%; /* Ensure image doesn’t exceed container width */
-  max-height: 100%; /* Ensure image doesn’t exceed container height */
+  max-width: 100%; /* Ensure image doesn't exceed container width */
+  max-height: 100%; /* Ensure image doesn't exceed container height */
   width: auto;
   height: auto;
   object-fit: contain; /* Scale image to fit within container */
