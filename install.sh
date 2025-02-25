@@ -1,6 +1,6 @@
 #!/bin/bash
-# Beginner-Friendly Installer for Self Hosted Google Drive (DriveDAV)
-# This script installs Nginx, PHP, required modules, downloads your PHP files
+# Beginner-Friendly Installer and Updater for Self Hosted Google Drive (DriveDAV)
+# This script installs Nginx, PHP, required modules, and updates your PHP files
 # from GitHub, creates necessary folders, sets proper permissions, adjusts PHP's size limits
 # for both CLI and PHP-FPM php.ini files, and verifies both.
 # Run this as root (e.g., sudo bash install.sh)
@@ -17,7 +17,7 @@ LOGFILE="/var/log/selfhostedgdrive_install.log"
 exec > >(tee -a "$LOGFILE") 2>&1
 
 echo "======================================"
-echo "Self Hosted Google Drive (DriveDAV) Installer"
+echo "Self Hosted Google Drive (DriveDAV) Installer/Updater"
 echo "======================================"
 
 # Check for root privileges
@@ -32,22 +32,25 @@ BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main"
 # List of required PHP files (includes register.php)
 FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php")
 
-# Update package lists
-echo "Updating package lists..."
-apt-get update
-
-# Install Nginx, PHP, and required PHP modules along with wget and curl for verification
-echo "Installing Nginx, PHP, and required modules..."
-apt-get install -y nginx php-fpm php-json php-mbstring php-xml wget curl
-
 # Define application directories
 APP_DIR="/var/www/html/selfhostedgdrive"
 WEBDAV_USERS_DIR="/var/www/html/webdav/users"
 USERS_JSON="$APP_DIR/users.json"
 
-# Create application directory
-echo "Creating application directory at $APP_DIR..."
-mkdir -p "$APP_DIR"
+# Create application directory if it doesn't exist
+if [ ! -d "$APP_DIR" ]; then
+  echo "Creating application directory at $APP_DIR..."
+  mkdir -p "$APP_DIR"
+fi
+
+# Backup existing PHP files
+echo "Backing up existing PHP files..."
+for file in "${FILES[@]}"; do
+  if [ -f "$APP_DIR/$file" ]; then
+    cp "$APP_DIR/$file" "$APP_DIR/$file.bak"
+    echo "Backed up $file to $file.bak"
+  fi
+done
 
 # Download PHP files from your GitHub repository into the application directory
 echo "Downloading PHP files from GitHub..."
