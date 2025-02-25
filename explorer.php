@@ -1833,7 +1833,9 @@ function setupVideoPlayer(fileURL, fileName) {
     fullscreenBtn.onclick = () => {
         if (!document.fullscreenElement) {
             previewModal.classList.add('fullscreen');
-            previewModal.requestFullscreen();
+            previewModal.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
         } else {
             document.exitFullscreen();
             previewModal.classList.remove('fullscreen');
@@ -1845,6 +1847,17 @@ function setupVideoPlayer(fileURL, fileName) {
     video.addEventListener('touchstart', (e) => {
         e.preventDefault();
         playPauseBtn.click();
+    });
+
+    // Handle full-screen change events
+    document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) {
+            // Full-screen mode is active
+            previewModal.classList.add('fullscreen');
+        } else {
+            // Exiting full-screen mode
+            previewModal.classList.remove('fullscreen');
+        }
     });
 }
 
