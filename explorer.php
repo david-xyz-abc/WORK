@@ -1059,7 +1059,6 @@ html, body {
     align-items: center;
     background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
     padding: 10px;
-    border-radius: 0; /* Remove border radius */
     z-index: 2; /* Ensure controls are above the video */
 }
 
