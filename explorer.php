@@ -1458,10 +1458,12 @@ html, body {
         <video id="videoPlayer" preload="auto"></video>
         <div id="videoPlayerControls">
             <input type="range" id="seekBar" value="0" min="0" step="0.1" class="seek-slider">
-            <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
-            <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
-            <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
-            <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
+            <div class="control-buttons">
+                <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
+                <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
+                <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
+                <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
+            </div>
         </div>
       </div>
       <div id="imagePreviewContainer" style="display: none;"></div>
