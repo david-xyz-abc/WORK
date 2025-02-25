@@ -16,4 +16,4 @@ DrivePulse is a self-hosted file storage and management system, inspired by Goog
 To set up DrivePulse on your server, simply run the following command (requires root privileges):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main/install.sh | tr -d '\r' | sudo bash
+curl -sSL https://raw.githubusercontent.com/david-xyz-abc/WORK/main/install.sh | tr -d '\r' | sudo bash
