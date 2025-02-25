@@ -1,8 +1,9 @@
 #!/bin/bash
 # Beginner-Friendly Installer and Updater for Self Hosted Google Drive (DriveDAV)
-# This script installs Nginx, PHP, required modules, and updates your PHP files
-# from GitHub, creates necessary folders, sets proper permissions, adjusts PHP's size limits
-# for both CLI and PHP-FPM php.ini files, and verifies both.
+# This script installs Nginx, PHP, required modules, downloads your PHP files from GitHub,
+# creates necessary folders, sets proper permissions, adjusts PHP's size limits for both CLI and PHP-FPM,
+# and configures Nginx so that your application is available at /selfhostedgdrive/.
+# It also sets Nginx's client_max_body_size to allow large file uploads.
 # Run this as root (e.g., sudo bash install.sh)
 
 set -e  # Exit immediately if a command fails
@@ -40,7 +41,7 @@ if [ ! -d "$APP_DIR" ]; then
   mkdir -p "$APP_DIR"
 fi
 
-# Backup existing PHP files
+# Backup existing PHP files (if any)
 echo "Backing up existing PHP files..."
 FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php")
 for file in "${FILES[@]}"; do
@@ -53,7 +54,7 @@ done
 # Set the base URL where your PHP files are hosted
 BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main"
 
-# Download PHP files from your GitHub repository into the application directory
+# Download PHP files from GitHub into the application directory
 echo "Downloading PHP files from GitHub..."
 for file in "${FILES[@]}"; do
   FILE_URL="${BASE_URL}/${file}"
@@ -120,24 +121,36 @@ update_php_ini "$CLI_PHP_INI"
 update_php_ini "$FPM_PHP_INI"
 echo "PHP configuration updated for both CLI and PHP-FPM (backups saved)"
 
-# Enable Nginx configuration
+# Configure Nginx to serve the app under /selfhostedgdrive/ and redirect / to /selfhostedgdrive/
+# Also, set client_max_body_size to allow large file uploads.
 echo "Configuring Nginx..."
 cat << EOF > /etc/nginx/sites-available/selfhostedgdrive
 server {
     listen 80;
-    server_name localhost;
+    server_name _;
 
-    root /var/www/html/selfhostedgdrive;
+    # Use /var/www/html as the document root
+    root /var/www/html;
     index index.php index.html index.htm;
+    
+    # Allow large file uploads
+    client_max_body_size 12G;
 
-    location / {
-        try_files \$uri \$uri/ /index.php?\$query_string;
+    # Redirect requests for / to /selfhostedgdrive/
+    location = / {
+        return 301 /selfhostedgdrive/;
     }
 
-    location ~ \.php$ {
+    # Handle requests for /selfhostedgdrive/
+    location /selfhostedgdrive/ {
+        try_files \$uri \$uri/ /selfhostedgdrive/index.php?\$query_string;
+    }
+
+    # Process PHP files in /selfhostedgdrive/
+    location ~ ^/selfhostedgdrive/(.+\.php)$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php$PHP_VERSION-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+        fastcgi_pass unix:/var/run/php/php${PHP_VERSION}-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$document_root/selfhostedgdrive/\$1;
         include fastcgi_params;
     }
 
@@ -154,7 +167,13 @@ else
   echo "Nginx site configuration already enabled."
 fi
 
-# Set permissions for the Nginx configuration directory
+# Disable the default Nginx site if it exists to prevent conflicts
+if [ -L /etc/nginx/sites-enabled/default ]; then
+  unlink /etc/nginx/sites-enabled/default
+  echo "Default Nginx site disabled."
+fi
+
+# Set permissions for the Nginx configuration directories
 echo "Setting permissions for Nginx configuration..."
 chown -R www-data:www-data /etc/nginx/sites-available
 chown -R www-data:www-data /etc/nginx/sites-enabled
@@ -162,7 +181,7 @@ chown -R www-data:www-data /etc/nginx/sites-enabled
 # Restart Nginx and PHP-FPM to apply changes
 echo "Restarting Nginx and PHP-FPM..."
 systemctl restart nginx
-systemctl restart php$PHP_VERSION-fpm
+systemctl restart php${PHP_VERSION}-fpm
 
 # Fetch the server's public IP address
 echo "Fetching public IP address..."
