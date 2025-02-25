@@ -583,7 +583,7 @@ html, body {
 }
 
 .storage-indicator {
-  margin-top: auto; /* Anchor to bottom */
+  margin-top: auto;
   padding: 10px;
   background: var(--content-bg);
   border: 1px solid var(--border-color);
@@ -812,31 +812,31 @@ html, body {
 }
 
 .file-icon-large {
-  font-size: 60px; /* Large icon for grid view */
+  font-size: 60px;
   margin-bottom: 10px;
-  display: none; /* Hidden by default in list view */
+  display: none;
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 120px; /* Match the height of the image preview */
+  height: 120px;
   color: var(--text-color);
 }
 
 .file-list.grid-view .file-icon-large {
-  display: flex; /* Show only in grid view */
+  display: flex;
 }
 
 .file-preview {
-    display: none;
+  display: none;
 }
 
 .file-list.grid-view .file-preview {
-    display: block;
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
-    border-radius: 4px;
-    margin-bottom: 10px;
+  display: block;
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 10px;
 }
 
 .file-list.grid-view .file-icon:not(.no-preview) {
@@ -959,21 +959,21 @@ html, body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw; /* Use viewport width */
-  height: 100vh; /* Use viewport height */
+  width: 100vw;
+  height: 100vh;
   background: rgba(0, 0, 0, 0.8);
   justify-content: center;
   align-items: center;
   z-index: 9998;
-  overflow: hidden; /* Prevent any overflow */
+  overflow: hidden;
 }
 
 #previewContent {
   position: relative;
-  width: auto; /* Let the content define its width */
-  max-width: 90vw; /* Limit width to 90% of viewport */
+  width: auto;
+  max-width: 90vw;
   height: auto;
-  max-height: 90vh; /* Limit height to 90% of viewport */
+  max-height: 90vh;
   background: var(--content-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -988,20 +988,20 @@ html, body {
   background: none;
   border: none;
   padding: 0;
-  max-width: 100vw; /* Allow full width for images */
-  max-height: 100vh; /* Allow full height for images */
+  max-width: 100vw;
+  max-height: 100vh;
 }
 
 #previewNav {
-  position: fixed; /* Change from absolute to fixed */
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  width: 100vw; /* Span the full viewport width */
+  width: 100vw;
   display: flex;
   justify-content: space-between;
   padding: 0 20px;
   box-sizing: border-box;
-  z-index: 9999; /* Ensure it stays above content */
+  z-index: 9999;
 }
 
 #previewNav button {
@@ -1026,7 +1026,7 @@ html, body {
 }
 
 #previewClose {
-  position: fixed; /* Change to fixed for consistent placement */
+  position: fixed;
   top: 20px;
   right: 20px;
   cursor: pointer;
@@ -1074,13 +1074,16 @@ html, body {
 }
 
 #videoPlayerControls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  flex-direction: column;
+  background: rgba(0, 0, 0, 0.6);
   padding: 10px;
   box-sizing: border-box;
-  gap: 10px; /* Add spacing between timeline and controls */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .timeline {
@@ -1117,7 +1120,7 @@ html, body {
   flex: 1;
   -webkit-appearance: none;
   height: 5px;
-  background: #333; /* Match the gray background in your image */
+  background: #333;
   border-radius: 5px;
   outline: none;
   margin: 0;
@@ -1127,7 +1130,7 @@ html, body {
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: var(--accent-red); /* Red thumb as in your image */
+  background: var(--accent-red);
   border-radius: 50%;
   cursor: pointer;
 }
@@ -1136,7 +1139,7 @@ html, body {
   -webkit-appearance: none;
   height: 5px;
   width: 80px;
-  background: #333; /* Match the gray background in your image */
+  background: #333;
   border-radius: 5px;
   outline: none;
   margin: 0 5px;
@@ -1146,7 +1149,7 @@ html, body {
   -webkit-appearance: none;
   width: 10px;
   height: 10px;
-  background: var(--accent-red); /* Red thumb as in your image */
+  background: var(--accent-red);
   border-radius: 50%;
   cursor: pointer;
 }
@@ -1168,84 +1171,62 @@ html, body {
   border-radius: 0;
 }
 
-#previewModal.fullscreen #videoPlayer {
-  max-height: 100vh;
-  height: 100vh;
-  width: 100vw;
-  object-fit: contain;
-}
-
 @media (max-width: 768px) {
   #videoPlayerContainer {
     max-width: 100%;
     max-height: 70vh;
   }
-
   #videoPlayer {
     max-height: calc(70vh - 50px);
   }
-
   #videoPlayerControls {
     padding: 5px;
     gap: 5px;
   }
-
   .timeline {
     gap: 5px;
   }
-
   .controls-row {
     gap: 5px;
   }
-
   .player-btn {
     width: 30px;
     height: 30px;
     font-size: 14px;
   }
-
   .volume-slider {
     width: 50px;
   }
-
   #currentTime, #duration {
     font-size: 10px;
     min-width: 30px;
   }
-
   #previewClose {
     top: 10px;
     right: 10px;
     font-size: 25px;
   }
-
   #previewNav button {
     width: 30px;
     height: 30px;
     font-size: 16px;
   }
-
   .file-list.grid-view {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
-
   .file-list.grid-view .file-row {
     height: 150px;
   }
-
   .file-list.grid-view .file-preview {
     height: 100px;
   }
-
   .file-list.grid-view .file-icon {
     font-size: 16px;
   }
-
   .file-list.grid-view .file-icon-large {
-    font-size: 50px; /* Adjust for smaller screens */
-    height: 100px; /* Match the smaller preview height */
+    font-size: 50px;
+    height: 100px;
   }
-
   #iconPreviewContainer i {
     font-size: 80px;
   }
@@ -1257,17 +1238,17 @@ html, body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  max-width: 90vw; /* Constrain to 90% of viewport width */
-  max-height: 90vh; /* Constrain to 90% of viewport height */
-  overflow: hidden; /* Prevent overflow */
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
 }
 
 #imagePreviewContainer img {
-  max-width: 100%; /* Ensure image doesn't exceed container width */
-  max-height: 100%; /* Ensure image doesn't exceed container height */
+  max-width: 100%;
+  max-height: 100%;
   width: auto;
   height: auto;
-  object-fit: contain; /* Scale image to fit within container */
+  object-fit: contain;
   display: block;
 }
 
@@ -1347,6 +1328,7 @@ html, body {
 }
 
 #dropZone.active { display: flex; }
+
 </style>
 </head>
 <body>
@@ -1504,7 +1486,8 @@ html, body {
   </div>
 
   
- <script>
+<script>
+// --- Sidebar and Folder Functions ---
 let selectedFolder = null;
 let currentXhr = null;
 let previewFiles = []; // Array to store previewable files
@@ -1512,209 +1495,216 @@ let currentPreviewIndex = -1;
 let isLoadingImage = false; // Flag to prevent overlapping image loads
 
 function toggleSidebar() {
-    const sb = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    sb.classList.toggle('open');
-    overlay.classList.toggle('show');
+  const sb = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  sb.classList.toggle('open');
+  overlay.classList.toggle('show');
 }
 document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
 
 function selectFolder(element, folderName) {
-    document.querySelectorAll('.folder-item.selected').forEach(item => item.classList.remove('selected'));
-    element.classList.add('selected');
-    selectedFolder = folderName;
-    document.getElementById('btnDeleteFolder').style.display = 'flex';
-    document.getElementById('btnRenameFolder').style.display = 'flex';
+  document.querySelectorAll('.folder-item.selected').forEach(item => item.classList.remove('selected'));
+  element.classList.add('selected');
+  selectedFolder = folderName;
+  document.getElementById('btnDeleteFolder').style.display = 'flex';
+  document.getElementById('btnRenameFolder').style.display = 'flex';
 }
+
 function openFolder(folderPath) {
-    console.log("Opening folder: " + folderPath);
-    window.location.href = '/selfhostedgdrive/explorer.php?folder=' + folderPath;
+  console.log("Opening folder: " + folderPath);
+  window.location.href = '/selfhostedgdrive/explorer.php?folder=' + folderPath;
 }
 
 function showPrompt(message, defaultValue, callback) {
-    const dialogModal = document.getElementById('dialogModal');
-    const dialogMessage = document.getElementById('dialogMessage');
-    const dialogButtons = document.getElementById('dialogButtons');
-    dialogMessage.innerHTML = '';
-    dialogButtons.innerHTML = '';
-    const msgEl = document.createElement('div');
-    msgEl.textContent = message;
-    msgEl.style.marginBottom = '10px';
-    dialogMessage.appendChild(msgEl);
-    const inputField = document.createElement('input');
-    inputField.type = 'text';
-    inputField.value = defaultValue || '';
-    inputField.style.width = '100%';
-    inputField.style.padding = '8px';
-    inputField.style.border = '1px solid #555';
-    inputField.style.borderRadius = '4px';
-    inputField.style.background = '#2a2a2a';
-    inputField.style.color = '#fff';
-    inputField.style.marginBottom = '15px';
-    dialogMessage.appendChild(inputField);
-    const okBtn = document.createElement('button');
-    okBtn.className = 'dialog-button';
-    okBtn.textContent = 'OK';
-    okBtn.onclick = () => { closeDialog(); if (callback) callback(inputField.value); };
-    dialogButtons.appendChild(okBtn);
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'dialog-button';
-    cancelBtn.textContent = 'Cancel';
-    cancelBtn.onclick = () => { closeDialog(); if (callback) callback(null); };
-    dialogButtons.appendChild(cancelBtn);
-    dialogModal.classList.add('show');
+  const dialogModal = document.getElementById('dialogModal');
+  const dialogMessage = document.getElementById('dialogMessage');
+  const dialogButtons = document.getElementById('dialogButtons');
+  dialogMessage.innerHTML = '';
+  dialogButtons.innerHTML = '';
+  const msgEl = document.createElement('div');
+  msgEl.textContent = message;
+  msgEl.style.marginBottom = '10px';
+  dialogMessage.appendChild(msgEl);
+  const inputField = document.createElement('input');
+  inputField.type = 'text';
+  inputField.value = defaultValue || '';
+  inputField.style.width = '100%';
+  inputField.style.padding = '8px';
+  inputField.style.border = '1px solid #555';
+  inputField.style.borderRadius = '4px';
+  inputField.style.background = '#2a2a2a';
+  inputField.style.color = '#fff';
+  inputField.style.marginBottom = '15px';
+  dialogMessage.appendChild(inputField);
+  const okBtn = document.createElement('button');
+  okBtn.className = 'dialog-button';
+  okBtn.textContent = 'OK';
+  okBtn.onclick = () => { closeDialog(); if (callback) callback(inputField.value); };
+  dialogButtons.appendChild(okBtn);
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'dialog-button';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = () => { closeDialog(); if (callback) callback(null); };
+  dialogButtons.appendChild(cancelBtn);
+  dialogModal.classList.add('show');
 }
-function closeDialog() { document.getElementById('dialogModal').classList.remove('show'); }
+
+function closeDialog() {
+  document.getElementById('dialogModal').classList.remove('show');
+}
+
 function showAlert(message, callback) {
-    const dialogModal = document.getElementById('dialogModal');
-    const dialogMessage = document.getElementById('dialogMessage');
-    const dialogButtons = document.getElementById('dialogButtons');
-    dialogMessage.textContent = message;
-    dialogButtons.innerHTML = '';
-    const okBtn = document.createElement('button');
-    okBtn.className = 'dialog-button';
-    okBtn.textContent = 'OK';
-    okBtn.onclick = () => { closeDialog(); if (callback) callback(); };
-    dialogButtons.appendChild(okBtn);
-    dialogModal.classList.add('show');
+  const dialogModal = document.getElementById('dialogModal');
+  const dialogMessage = document.getElementById('dialogMessage');
+  const dialogButtons = document.getElementById('dialogButtons');
+  dialogMessage.textContent = message;
+  dialogButtons.innerHTML = '';
+  const okBtn = document.createElement('button');
+  okBtn.className = 'dialog-button';
+  okBtn.textContent = 'OK';
+  okBtn.onclick = () => { closeDialog(); if (callback) callback(); };
+  dialogButtons.appendChild(okBtn);
+  dialogModal.classList.add('show');
 }
+
 function showConfirm(message, onYes, onNo) {
-    const dialogModal = document.getElementById('dialogModal');
-    const dialogMessage = document.getElementById('dialogMessage');
-    const dialogButtons = document.getElementById('dialogButtons');
-    dialogMessage.textContent = message;
-    dialogButtons.innerHTML = '';
-    const yesBtn = document.createElement('button');
-    yesBtn.className = 'dialog-button';
-    yesBtn.textContent = 'Yes';
-    yesBtn.onclick = () => { closeDialog(); if (onYes) onYes(); };
-    dialogButtons.appendChild(yesBtn);
-    const noBtn = document.createElement('button');
-    noBtn.className = 'dialog-button';
-    noBtn.textContent = 'No';
-    noBtn.onclick = () => { closeDialog(); if (onNo) onNo(); };
-    dialogButtons.appendChild(noBtn);
-    dialogModal.classList.add('show');
+  const dialogModal = document.getElementById('dialogModal');
+  const dialogMessage = document.getElementById('dialogMessage');
+  const dialogButtons = document.getElementById('dialogButtons');
+  dialogMessage.textContent = message;
+  dialogButtons.innerHTML = '';
+  const yesBtn = document.createElement('button');
+  yesBtn.className = 'dialog-button';
+  yesBtn.textContent = 'Yes';
+  yesBtn.onclick = () => { closeDialog(); if (onYes) onYes(); };
+  dialogButtons.appendChild(yesBtn);
+  const noBtn = document.createElement('button');
+  noBtn.className = 'dialog-button';
+  noBtn.textContent = 'No';
+  noBtn.onclick = () => { closeDialog(); if (onNo) onNo(); };
+  dialogButtons.appendChild(noBtn);
+  dialogModal.classList.add('show');
 }
 
 function createFolder() {
-    showPrompt("Enter new folder name:", "", function(folderName) {
-        if (folderName && folderName.trim() !== "") {
-            let form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>';
-            let inputCreate = document.createElement('input');
-            inputCreate.type = 'hidden';
-            inputCreate.name = 'create_folder';
-            inputCreate.value = '1';
-            form.appendChild(inputCreate);
-            let inputName = document.createElement('input');
-            inputName.type = 'hidden';
-            inputName.name = 'folder_name';
-            inputName.value = folderName.trim();
-            form.appendChild(inputName);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
+  showPrompt("Enter new folder name:", "", function(folderName) {
+    if (folderName && folderName.trim() !== "") {
+      let form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>';
+      let inputCreate = document.createElement('input');
+      inputCreate.type = 'hidden';
+      inputCreate.name = 'create_folder';
+      inputCreate.value = '1';
+      form.appendChild(inputCreate);
+      let inputName = document.createElement('input');
+      inputName.type = 'hidden';
+      inputName.name = 'folder_name';
+      inputName.value = folderName.trim();
+      form.appendChild(inputName);
+      document.body.appendChild(form);
+      form.submit();
+    }
+  });
 }
 
 document.getElementById('btnRenameFolder').addEventListener('click', function() {
-    if (!selectedFolder) return;
-    showPrompt("Enter new folder name:", selectedFolder, function(newName) {
-        if (newName && newName.trim() !== "" && newName !== selectedFolder) {
-            let form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>';
-            let inputAction = document.createElement('input');
-            inputAction.type = 'hidden';
-            inputAction.name = 'rename_folder';
-            inputAction.value = '1';
-            form.appendChild(inputAction);
-            let inputOld = document.createElement('input');
-            inputOld.type = 'hidden';
-            inputOld.name = 'old_folder_name';
-            inputOld.value = selectedFolder;
-            form.appendChild(inputOld);
-            let inputNew = document.createElement('input');
-            inputNew.type = 'hidden';
-            inputNew.name = 'new_folder_name';
-            inputNew.value = newName.trim();
-            form.appendChild(inputNew);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
+  if (!selectedFolder) return;
+  showPrompt("Enter new folder name:", selectedFolder, function(newName) {
+    if (newName && newName.trim() !== "" && newName !== selectedFolder) {
+      let form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>';
+      let inputAction = document.createElement('input');
+      inputAction.type = 'hidden';
+      inputAction.name = 'rename_folder';
+      inputAction.value = '1';
+      form.appendChild(inputAction);
+      let inputOld = document.createElement('input');
+      inputOld.type = 'hidden';
+      inputOld.name = 'old_folder_name';
+      inputOld.value = selectedFolder;
+      form.appendChild(inputOld);
+      let inputNew = document.createElement('input');
+      inputNew.type = 'hidden';
+      inputNew.name = 'new_folder_name';
+      inputNew.value = newName.trim();
+      form.appendChild(inputNew);
+      document.body.appendChild(form);
+      form.submit();
+    }
+  });
 });
 
 document.getElementById('btnDeleteFolder').addEventListener('click', function() {
-    if (!selectedFolder) return;
-    showConfirm(`Delete folder "${selectedFolder}"?`, () => {
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>&delete=' + encodeURIComponent(selectedFolder);
-        document.body.appendChild(form);
-        form.submit();
-    });
+  if (!selectedFolder) return;
+  showConfirm(`Delete folder "${selectedFolder}"?`, () => {
+    let form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>&delete=' + encodeURIComponent(selectedFolder);
+    document.body.appendChild(form);
+    form.submit();
+  });
 });
 
 function renameFilePrompt(fileName) {
-    let dotIndex = fileName.lastIndexOf(".");
-    let baseName = fileName;
-    let ext = "";
-    if (dotIndex > 0) {
-        baseName = fileName.substring(0, dotIndex);
-        ext = fileName.substring(dotIndex);
+  let dotIndex = fileName.lastIndexOf(".");
+  let baseName = fileName;
+  let ext = "";
+  if (dotIndex > 0) {
+    baseName = fileName.substring(0, dotIndex);
+    ext = fileName.substring(dotIndex);
+  }
+  showPrompt("Enter new file name:", baseName, function(newBase) {
+    if (newBase && newBase.trim() !== "" && newBase.trim() !== baseName) {
+      let finalName = newBase.trim() + ext;
+      let form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>';
+      let inputAction = document.createElement('input');
+      inputAction.type = 'hidden';
+      inputAction.name = 'rename_file';
+      inputAction.value = '1';
+      form.appendChild(inputAction);
+      let inputOld = document.createElement('input');
+      inputOld.type = 'hidden';
+      inputOld.name = 'old_file_name';
+      inputOld.value = fileName;
+      form.appendChild(inputOld);
+      let inputNew = document.createElement('input');
+      inputNew.type = 'hidden';
+      inputNew.name = 'new_file_name';
+      inputNew.value = finalName;
+      form.appendChild(inputNew);
+      document.body.appendChild(form);
+      form.submit();
     }
-    showPrompt("Enter new file name:", baseName, function(newBase) {
-        if (newBase && newBase.trim() !== "" && newBase.trim() !== baseName) {
-            let finalName = newBase.trim() + ext;
-            let form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>';
-            let inputAction = document.createElement('input');
-            inputAction.type = 'hidden';
-            inputAction.name = 'rename_file';
-            inputAction.value = '1';
-            form.appendChild(inputAction);
-            let inputOld = document.createElement('input');
-            inputOld.type = 'hidden';
-            inputOld.name = 'old_file_name';
-            inputOld.value = fileName;
-            form.appendChild(inputOld);
-            let inputNew = document.createElement('input');
-            inputNew.type = 'hidden';
-            inputNew.name = 'new_file_name';
-            inputNew.value = finalName;
-            form.appendChild(inputNew);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
+  });
 }
 
 function confirmFileDelete(fileName) {
-    showConfirm(`Delete file "${fileName}"?`, () => {
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>&delete=' + encodeURIComponent(fileName);
-        document.body.appendChild(form);
-        form.submit();
-    });
+  showConfirm(`Delete file "${fileName}"?`, () => {
+    let form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/selfhostedgdrive/explorer.php?folder=<?php echo urlencode($currentRel); ?>&delete=' + encodeURIComponent(fileName);
+    document.body.appendChild(form);
+    form.submit();
+  });
 }
 
 function downloadFile(fileURL) {
-    console.log("Downloading: " + fileURL);
-    const a = document.createElement('a');
-    a.href = fileURL;
-    a.download = '';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  console.log("Downloading: " + fileURL);
+  const a = document.createElement('a');
+  a.href = fileURL;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
-// Collect all previewable files for navigation
+// --- Preview and Video Player Functions ---
 <?php
+// PHP snippet that collects previewable files (remains unchanged)
 $previewableFiles = [];
 foreach ($files as $fileName) {
     $relativePath = $currentRel . '/' . $fileName;
@@ -1723,209 +1713,206 @@ foreach ($files as $fileName) {
     $previewableFiles[] = ['name' => $fileName, 'url' => $fileURL, 'type' => isImage($fileName) ? 'image' : (isVideo($fileName) ? 'video' : 'other'), 'icon' => $iconClass];
 }
 ?>
-
 function openPreviewModal(fileURL, fileName) {
-    if (isLoadingImage) return; // Prevent overlapping loads
-    console.log("Previewing: " + fileURL);
-    const previewModal = document.getElementById('previewModal');
-    const videoContainer = document.getElementById('videoPlayerContainer');
-    const imageContainer = document.getElementById('imagePreviewContainer');
-    const iconContainer = document.getElementById('iconPreviewContainer');
-    const previewContent = document.getElementById('previewContent');
-    const videoPlayer = document.getElementById('videoPlayer');
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const previewClose = document.getElementById('previewClose');
+  if (isLoadingImage) return; // Prevent overlapping loads
+  console.log("Previewing: " + fileURL);
+  const previewModal = document.getElementById('previewModal');
+  const videoContainer = document.getElementById('videoPlayerContainer');
+  const imageContainer = document.getElementById('imagePreviewContainer');
+  const iconContainer = document.getElementById('iconPreviewContainer');
+  const previewContent = document.getElementById('previewContent');
+  const videoPlayer = document.getElementById('videoPlayer');
+  const previewClose = document.getElementById('previewClose');
 
-    // Clear all preview containers
-    videoContainer.style.display = 'none';
-    imageContainer.style.display = 'none';
-    imageContainer.innerHTML = ''; // Clear previous images
-    iconContainer.style.display = 'none';
-    iconContainer.innerHTML = ''; // Clear icon content
-    videoPlayer.pause();
-    videoPlayer.src = ''; // Reset video source
-    previewContent.classList.remove('image-preview'); // Reset class
+  // Clear all preview containers and reset state
+  videoContainer.style.display = 'none';
+  imageContainer.style.display = 'none';
+  imageContainer.innerHTML = '';
+  iconContainer.style.display = 'none';
+  iconContainer.innerHTML = '';
+  videoPlayer.pause();
+  videoPlayer.src = '';
+  previewContent.classList.remove('image-preview');
 
-    // Populate previewable files
-    previewFiles = <?php echo json_encode($previewableFiles); ?>;
-    currentPreviewIndex = previewFiles.findIndex(file => file.name === fileName);
+  // Populate previewable files from PHP
+  previewFiles = <?php echo json_encode($previewableFiles); ?>;
+  currentPreviewIndex = previewFiles.findIndex(file => file.name === fileName);
 
-    let file = previewFiles.find(f => f.name === fileName);
-    if (file.type === 'image') {
-        isLoadingImage = true;
-        fetch(file.url)
-            .then(response => {
-                if (!response.ok) throw new Error('Preview failed: ' + response.status);
-                return response.blob();
-            })
-            .then(blob => {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(blob);
-                imageContainer.appendChild(img);
-                imageContainer.style.display = 'flex';
-                previewClose.style.display = 'none'; // Hide close button for images
-                previewContent.classList.add('image-preview'); // Remove box styling
-            })
-            .catch(error => showAlert('Preview error: ' + error.message))
-            .finally(() => {
-                isLoadingImage = false; // Reset flag after loading
-            });
-    } else if (file.type === 'video') {
-        videoPlayer.src = file.url;
-        videoContainer.style.display = 'block';
-        previewClose.style.display = 'block'; // Show close button for videos
-        setupVideoPlayer(file.url, file.name);
-    } else if (file.type === 'other') {
-        const icon = document.createElement('i');
-        icon.className = file.icon;
-        iconContainer.appendChild(icon);
-        iconContainer.style.display = 'flex';
-        previewClose.style.display = 'block'; // Show close button for others
-    } else {
-        downloadFile(file.url);
-        return;
+  let file = previewFiles.find(f => f.name === fileName);
+  if (file.type === 'image') {
+    isLoadingImage = true;
+    fetch(file.url)
+      .then(response => {
+        if (!response.ok) throw new Error('Preview failed: ' + response.status);
+        return response.blob();
+      })
+      .then(blob => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(blob);
+        imageContainer.appendChild(img);
+        imageContainer.style.display = 'flex';
+        previewClose.style.display = 'none';
+        previewContent.classList.add('image-preview');
+      })
+      .catch(error => showAlert('Preview error: ' + error.message))
+      .finally(() => {
+        isLoadingImage = false;
+      });
+  } else if (file.type === 'video') {
+    videoPlayer.src = file.url;
+    videoContainer.style.display = 'block';
+    previewClose.style.display = 'block';
+    setupVideoPlayer(file.url, file.name);
+  } else if (file.type === 'other') {
+    const icon = document.createElement('i');
+    icon.className = file.icon;
+    iconContainer.appendChild(icon);
+    iconContainer.style.display = 'flex';
+    previewClose.style.display = 'block';
+  } else {
+    downloadFile(file.url);
+    return;
+  }
+
+  previewModal.style.display = 'flex';
+  updateNavigationButtons();
+
+  previewModal.onclick = function(e) {
+    if (e.target === previewModal && file.type === 'image') {
+      closePreviewModal();
     }
-
-    previewModal.style.display = 'flex';
-    updateNavigationButtons();
-
-    // Add click-outside-to-close functionality for images
-    previewModal.onclick = function(e) {
-        if (e.target === previewModal && file.type === 'image') {
-            closePreviewModal();
-        }
-    };
+  };
 }
 window.openPreviewModal = openPreviewModal;
 
+// --- Modified Video Player Setup with Fullscreen Handling ---
 function setupVideoPlayer(fileURL, fileName) {
-    const video = document.getElementById('videoPlayer');
-    const playPauseBtn = document.getElementById('playPauseBtn');
-    const seekBar = document.getElementById('seekBar');
-    const currentTime = document.getElementById('currentTime');
-    const duration = document.getElementById('duration');
-    const muteBtn = document.getElementById('muteBtn');
-    const volumeBar = document.getElementById('volumeBar');
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const previewModal = document.getElementById('previewModal');
+  const video = document.getElementById('videoPlayer');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const seekBar = document.getElementById('seekBar');
+  const currentTime = document.getElementById('currentTime');
+  const duration = document.getElementById('duration');
+  const muteBtn = document.getElementById('muteBtn');
+  const volumeBar = document.getElementById('volumeBar');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-    video.src = fileURL;
-    video.preload = 'auto';
-    video.load();
+  video.src = fileURL;
+  video.preload = 'auto';
+  video.load();
 
-    const videoKey = `video_position_${fileName}`;
-    const savedTime = localStorage.getItem(videoKey);
-    if (savedTime) video.currentTime = parseFloat(savedTime);
+  const videoKey = `video_position_${fileName}`;
+  const savedTime = localStorage.getItem(videoKey);
+  if (savedTime) video.currentTime = parseFloat(savedTime);
 
-    video.onloadedmetadata = () => {
-        seekBar.max = video.duration;
-        duration.textContent = formatTime(video.duration);
-    };
+  video.onloadedmetadata = () => {
+    seekBar.max = video.duration;
+    duration.textContent = formatTime(video.duration);
+  };
 
-    video.ontimeupdate = () => {
-        seekBar.value = video.currentTime;
-        currentTime.textContent = formatTime(video.currentTime);
-        localStorage.setItem(videoKey, video.currentTime);
-    };
+  video.ontimeupdate = () => {
+    seekBar.value = video.currentTime;
+    currentTime.textContent = formatTime(video.currentTime);
+    localStorage.setItem(videoKey, video.currentTime);
+  };
 
-    playPauseBtn.onclick = () => {
-        if (video.paused) {
-            video.play();
-            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-        } else {
-            video.pause();
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-        }
-    };
+  playPauseBtn.onclick = () => {
+    if (video.paused) {
+      video.play();
+      playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+    } else {
+      video.pause();
+      playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+    }
+  };
 
-    seekBar.oninput = () => {
-        video.currentTime = seekBar.value;
-    };
+  seekBar.oninput = () => {
+    video.currentTime = seekBar.value;
+  };
 
-    muteBtn.onclick = () => {
-        video.muted = !video.muted;
-        muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-        volumeBar.value = video.muted ? 0 : video.volume;
-    };
+  muteBtn.onclick = () => {
+    video.muted = !video.muted;
+    muteBtn.innerHTML = video.muted
+      ? '<i class="fas fa-volume-mute"></i>'
+      : '<i class="fas fa-volume-up"></i>';
+    volumeBar.value = video.muted ? 0 : video.volume;
+  };
 
-    volumeBar.oninput = () => {
-        video.volume = volumeBar.value;
-        video.muted = (volumeBar.value == 0);
-        muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-    };
+  volumeBar.oninput = () => {
+    video.volume = volumeBar.value;
+    video.muted = (volumeBar.value == 0);
+    muteBtn.innerHTML = video.muted
+      ? '<i class="fas fa-volume-mute"></i>'
+      : '<i class="fas fa-volume-up"></i>';
+  };
 
-    fullscreenBtn.onclick = () => {
-        if (!document.fullscreenElement) {
-            previewModal.classList.add('fullscreen');
-            previewModal.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
-        } else {
-            document.exitFullscreen();
-            previewModal.classList.remove('fullscreen');
-        }
-    };
+  // NEW FULLSCREEN HANDLER: Request full screen on the video container
+  fullscreenBtn.onclick = () => {
+    const videoContainer = document.getElementById('videoPlayerContainer');
+    if (!document.fullscreenElement) {
+      videoContainer.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
 
-    video.onclick = () => playPauseBtn.click();
+  // Adjust fullscreen styling by toggling a class on the container
+  document.addEventListener('fullscreenchange', () => {
+    const videoContainer = document.getElementById('videoPlayerContainer');
+    if (document.fullscreenElement === videoContainer) {
+      videoContainer.classList.add('fullscreen');
+    } else {
+      videoContainer.classList.remove('fullscreen');
+    }
+  });
 
-    video.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        playPauseBtn.click();
-    });
-
-    // Handle full-screen change events
-    document.addEventListener('fullscreenchange', () => {
-        if (document.fullscreenElement) {
-            // Full-screen mode is active
-            previewModal.classList.add('fullscreen');
-        } else {
-            // Exiting full-screen mode
-            previewModal.classList.remove('fullscreen');
-        }
-    });
+  video.onclick = () => playPauseBtn.click();
+  video.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    playPauseBtn.click();
+  });
 }
 
 function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
 function closePreviewModal() {
-    const video = document.getElementById('videoPlayer');
-    video.pause();
-    video.src = '';
-    document.getElementById('previewModal').style.display = 'none';
-    if (document.fullscreenElement) document.exitFullscreen();
-    document.getElementById('previewModal').classList.remove('fullscreen');
-    document.getElementById('previewModal').onclick = null; // Remove event listener
-    document.getElementById('previewClose').style.display = 'block'; // Reset close button visibility
-    document.getElementById('previewContent').classList.remove('image-preview'); // Reset class
-    isLoadingImage = false; // Reset loading flag
-    previewFiles = [];
-    currentPreviewIndex = -1;
+  const video = document.getElementById('videoPlayer');
+  video.pause();
+  video.src = '';
+  document.getElementById('previewModal').style.display = 'none';
+  if (document.fullscreenElement) document.exitFullscreen();
+  document.getElementById('previewModal').classList.remove('fullscreen');
+  document.getElementById('previewModal').onclick = null;
+  document.getElementById('previewClose').style.display = 'block';
+  document.getElementById('previewContent').classList.remove('image-preview');
+  isLoadingImage = false;
+  previewFiles = [];
+  currentPreviewIndex = -1;
 }
 window.closePreviewModal = closePreviewModal;
 
 function navigatePreview(direction) {
-    if (previewFiles.length === 0 || currentPreviewIndex === -1 || isLoadingImage) return;
-
-    currentPreviewIndex += direction;
-    if (currentPreviewIndex < 0) currentPreviewIndex = previewFiles.length - 1;
-    if (currentPreviewIndex >= previewFiles.length) currentPreviewIndex = 0;
-
-    const file = previewFiles[currentPreviewIndex];
-    openPreviewModal(file.url, file.name);
+  if (previewFiles.length === 0 || currentPreviewIndex === -1 || isLoadingImage) return;
+  currentPreviewIndex += direction;
+  if (currentPreviewIndex < 0) currentPreviewIndex = previewFiles.length - 1;
+  if (currentPreviewIndex >= previewFiles.length) currentPreviewIndex = 0;
+  const file = previewFiles[currentPreviewIndex];
+  openPreviewModal(file.url, file.name);
 }
 
 function updateNavigationButtons() {
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    prevBtn.disabled = previewFiles.length <= 1;
-    nextBtn.disabled = previewFiles.length <= 1;
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  prevBtn.disabled = previewFiles.length <= 1;
+  nextBtn.disabled = previewFiles.length <= 1;
 }
 
+// --- File Upload, Grid View, Theme Toggle, etc. ---
 const uploadForm = document.getElementById('uploadForm');
 const fileInput = document.getElementById('fileInput');
 const uploadBtn = document.getElementById('uploadBtn');
@@ -1940,136 +1927,129 @@ const gridToggleBtn = document.getElementById('gridToggleBtn');
 
 uploadBtn.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => {
-    if (fileInput.files.length) startUpload(fileInput.files);
+  if (fileInput.files.length) startUpload(fileInput.files);
 });
 
 mainContent.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropZone.classList.add('active');
+  e.preventDefault();
+  dropZone.classList.add('active');
 });
 mainContent.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('active');
+  e.preventDefault();
+  dropZone.classList.remove('active');
 });
 mainContent.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropZone.classList.remove('active');
-    const files = e.dataTransfer.files;
-    if (files.length > 0) startUpload(files);
+  e.preventDefault();
+  dropZone.classList.remove('active');
+  const files = e.dataTransfer.files;
+  if (files.length > 0) startUpload(files);
 });
 
 function startUpload(fileList) {
-    for (let file of fileList) {
-        let totalUploaded = 0; // Track total bytes uploaded for this file
-        uploadChunk(file, 0, file.name, totalUploaded);
-    }
+  for (let file of fileList) {
+    let totalUploaded = 0;
+    uploadChunk(file, 0, file.name, totalUploaded);
+  }
 }
 
 function uploadChunk(file, startByte, fileName, totalUploaded) {
-    const chunkSize = 10 * 1024 * 1024; // 10 MB chunks
-    const endByte = Math.min(startByte + chunkSize, file.size);
-    const chunk = file.slice(startByte, endByte);
-
-    const formData = new FormData();
-    formData.append('upload_files[]', chunk, file.name);
-    formData.append('file_name', file.name);
-    formData.append('chunk_start', startByte);
-    formData.append('chunk_end', endByte - 1);
-    formData.append('total_size', file.size);
-
-    uploadProgressContainer.style.display = 'block';
-    uploadProgressPercent.textContent = `0.0% - Uploading ${fileName}`;
-    let attempts = 0;
-    const maxAttempts = 3;
-
-    function attemptUpload() {
-        const xhr = new XMLHttpRequest();
-        currentXhr = xhr;
-        xhr.open('POST', uploadForm.action, true);
-        xhr.timeout = 3600000;
-        xhr.upload.onprogress = (e) => {
-            if (e.lengthComputable) {
-                const chunkUploaded = e.loaded; // Bytes uploaded in this chunk
-                const totalBytesUploaded = totalUploaded + chunkUploaded;
-                const totalPercent = Math.round((totalBytesUploaded / file.size) * 100 * 10) / 10; // One decimal place
-                uploadProgressBar.style.width = totalPercent + '%';
-                uploadProgressPercent.textContent = `${totalPercent}% - Uploading ${fileName}`;
-            }
-        };
-        xhr.onload = () => {
-            if (xhr.status === 200) {
-                totalUploaded += (endByte - startByte); // Update total bytes uploaded
-                if (endByte < file.size) {
-                    uploadChunk(file, endByte, fileName, totalUploaded);
-                } else {
-                    showAlert('Upload completed successfully.');
-                    uploadProgressContainer.style.display = 'none';
-                    location.reload();
-                }
-            } else {
-                handleUploadError(xhr, attempts, maxAttempts);
-            }
-        };
-        xhr.onerror = () => handleUploadError(xhr, attempts, maxAttempts);
-        xhr.ontimeout = () => handleUploadError(xhr, attempts, maxAttempts);
-        xhr.send(formData);
-    }
-
-    function handleUploadError(xhr, attempts, maxAttempts) {
-        attempts++;
-        if (attempts < maxAttempts) {
-            showAlert(`Upload failed for ${fileName} (Attempt ${attempts}). Retrying in 5 seconds... Status: ${xhr.status} - ${xhr.statusText}`);
-            setTimeout(attemptUpload, 5000);
+  const chunkSize = 10 * 1024 * 1024; // 10 MB
+  const endByte = Math.min(startByte + chunkSize, file.size);
+  const chunk = file.slice(startByte, endByte);
+  const formData = new FormData();
+  formData.append('upload_files[]', chunk, file.name);
+  formData.append('file_name', file.name);
+  formData.append('chunk_start', startByte);
+  formData.append('chunk_end', endByte - 1);
+  formData.append('total_size', file.size);
+  uploadProgressContainer.style.display = 'block';
+  uploadProgressPercent.textContent = `0.0% - Uploading ${fileName}`;
+  let attempts = 0;
+  const maxAttempts = 3;
+  function attemptUpload() {
+    const xhr = new XMLHttpRequest();
+    currentXhr = xhr;
+    xhr.open('POST', uploadForm.action, true);
+    xhr.timeout = 3600000;
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const chunkUploaded = e.loaded;
+        const totalBytesUploaded = totalUploaded + chunkUploaded;
+        const totalPercent = Math.round((totalBytesUploaded / file.size) * 1000) / 10;
+        uploadProgressBar.style.width = totalPercent + '%';
+        uploadProgressPercent.textContent = `${totalPercent}% - Uploading ${fileName}`;
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        totalUploaded += (endByte - startByte);
+        if (endByte < file.size) {
+          uploadChunk(file, endByte, fileName, totalUploaded);
         } else {
-            showAlert(`Upload failed for ${fileName} after ${maxAttempts} attempts. Status: ${xhr.status} - ${xhr.statusText}. Please check server logs or network connection.`);
-            uploadProgressContainer.style.display = 'none';
+          showAlert('Upload completed successfully.');
+          uploadProgressContainer.style.display = 'none';
+          location.reload();
         }
+      } else {
+        handleUploadError(xhr, attempts, maxAttempts);
+      }
+    };
+    xhr.onerror = () => handleUploadError(xhr, attempts, maxAttempts);
+    xhr.ontimeout = () => handleUploadError(xhr, attempts, maxAttempts);
+    xhr.send(formData);
+  }
+  function handleUploadError(xhr, attempts, maxAttempts) {
+    attempts++;
+    if (attempts < maxAttempts) {
+      showAlert(`Upload failed for ${fileName} (Attempt ${attempts}). Retrying in 5 seconds... Status: ${xhr.status} - ${xhr.statusText}`);
+      setTimeout(attemptUpload, 5000);
+    } else {
+      showAlert(`Upload failed for ${fileName} after ${maxAttempts} attempts. Status: ${xhr.status} - ${xhr.statusText}. Please check server logs or network connection.`);
+      uploadProgressContainer.style.display = 'none';
     }
-
-    attemptUpload();
+  }
+  attemptUpload();
 }
 
 cancelUploadBtn.addEventListener('click', () => {
-    if (currentXhr) {
-        currentXhr.abort();
-        uploadProgressContainer.style.display = 'none';
-        fileInput.value = "";
-        showAlert('Upload canceled.');
-    }
+  if (currentXhr) {
+    currentXhr.abort();
+    uploadProgressContainer.style.display = 'none';
+    fileInput.value = "";
+    showAlert('Upload canceled.');
+  }
 });
 
 const themeToggleBtn = document.getElementById('themeToggleBtn');
 const body = document.body;
 const savedTheme = localStorage.getItem('theme') || 'dark';
 if (savedTheme === 'light') {
-    body.classList.add('light-mode');
-    themeToggleBtn.querySelector('i').classList.replace('fa-moon', 'fa-sun');
+  body.classList.add('light-mode');
+  themeToggleBtn.querySelector('i').classList.replace('fa-moon', 'fa-sun');
 } else {
-    body.classList.remove('light-mode');
-    themeToggleBtn.querySelector('i').classList.replace('fa-sun', 'fa-moon');
+  body.classList.remove('light-mode');
+  themeToggleBtn.querySelector('i').classList.replace('fa-sun', 'fa-moon');
 }
 themeToggleBtn.addEventListener('click', () => {
-    body.classList.toggle('light-mode');
-    const isLightMode = body.classList.contains('light-mode');
-    themeToggleBtn.querySelector('i').classList.toggle('fa-moon', !isLightMode);
-    themeToggleBtn.querySelector('i').classList.toggle('fa-sun', isLightMode);
-    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+  body.classList.toggle('light-mode');
+  const isLightMode = body.classList.contains('light-mode');
+  themeToggleBtn.querySelector('i').classList.toggle('fa-moon', !isLightMode);
+  themeToggleBtn.querySelector('i').classList.toggle('fa-sun', isLightMode);
+  localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
 });
 
-// Grid View Toggle with Persistence
 let isGridView = localStorage.getItem('gridView') === 'true';
 function updateGridView() {
-    fileList.classList.toggle('grid-view', isGridView);
-    gridToggleBtn.querySelector('i').classList.toggle('fa-th', isGridView);
-    gridToggleBtn.querySelector('i').classList.toggle('fa-list', !isGridView);
-    gridToggleBtn.title = isGridView ? 'Switch to List View' : 'Switch to Grid View';
+  fileList.classList.toggle('grid-view', isGridView);
+  gridToggleBtn.querySelector('i').classList.toggle('fa-th', isGridView);
+  gridToggleBtn.querySelector('i').classList.toggle('fa-list', !isGridView);
+  gridToggleBtn.title = isGridView ? 'Switch to List View' : 'Switch to Grid View';
 }
-// Initialize grid view state
 updateGridView();
-
 gridToggleBtn.addEventListener('click', () => {
-    isGridView = !isGridView;
-    localStorage.setItem('gridView', isGridView);
-    updateGridView();
+  isGridView = !isGridView;
+  localStorage.setItem('gridView', isGridView);
+  updateGridView();
 });
 </script>
+
