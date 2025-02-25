@@ -27,7 +27,7 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Set the base URL where your PHP files are hosted (updated to new repo).
-BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/WORK/main"
+BASE_URL="https://raw.githubusercontent.com/david-xyz-abc/drivedavfinal/main"
 
 # List of required PHP files (includes register.php)
 FILES=("index.php" "authenticate.php" "explorer.php" "logout.php" "register.php")
@@ -119,7 +119,7 @@ echo "PHP configuration updated for both CLI and PHP-FPM (backups saved)"
 
 # Enable Nginx configuration (optional)
 echo "Configuring Nginx..."
-cat << 'EOF' > /etc/nginx/sites-available/selfhostedgdrive
+cat << EOF > /etc/nginx/sites-available/selfhostedgdrive
 server {
     listen 80;
     server_name localhost;
@@ -128,13 +128,13 @@ server {
     index index.php index.html index.htm;
 
     location / {
-        try_files $uri $uri/ /index.php?$query_string;
+        try_files \$uri \$uri/ /index.php?\$query_string;
     }
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php$PHP_VERSION-fpm.sock;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
 
