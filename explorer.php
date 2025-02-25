@@ -5,16 +5,17 @@ session_start();
 define('DEBUG', false);
 $debug_log = '/var/www/html/selfhostedgdrive/debug.log';
 function log_debug($message) {
+    global $debug_log;
     if (DEBUG) {
-        file_put_contents($debug_log, date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
+        error_log(date('[Y-m-d H:i:s] ') . $message . "\n", 3, $debug_log);
     }
 }
 
-// Ensure debug log exists and has correct permissions (run once during setup)
+// Ensure debug log exists and has correct permissions
 if (!file_exists($debug_log)) {
-    file_put_contents($debug_log, "Debug log initialized\n");
+    touch($debug_log);
     chown($debug_log, 'www-data');
-    chmod($debug_log, 0666);
+    chmod($debug_log, 0640); // More secure permissions
 }
 
 // Log request basics
@@ -24,12 +25,12 @@ log_debug("Loggedin: " . (isset($_SESSION['loggedin']) ? var_export($_SESSION['l
 log_debug("Username: " . (isset($_SESSION['username']) ? $_SESSION['username'] : "Not set"));
 log_debug("GET params: " . var_export($_GET, true));
 
-// Optimized file serving with range support
+// Optimized file serving with range support and security checks
 if (isset($_GET['action']) && $_GET['action'] === 'serve' && isset($_GET['file'])) {
     if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || !isset($_SESSION['username'])) {
-        log_debug("Unauthorized file request, redirecting to index.php");
-        header("Location: /selfhostedgdrive/index.php", true, 302);
-        exit;
+        log_debug("Unauthorized file request");
+        header("HTTP/1.1 403 Forbidden");
+        exit("Access denied.");
     }
 
     $username = $_SESSION['username'];
@@ -37,25 +38,38 @@ if (isset($_GET['action']) && $_GET['action'] === 'serve' && isset($_GET['file']
     if ($baseDir === false) {
         log_debug("Base directory not found for user: $username");
         header("HTTP/1.1 500 Internal Server Error");
-        echo "Server configuration error.";
-        exit;
+        exit("Server configuration error.");
     }
 
     $requestedFile = urldecode($_GET['file']);
+    $requestedFile = str_replace('..', '', $requestedFile); // Remove path traversal attempts
+    $requestedFile = ltrim($requestedFile, '/');
     if (strpos($requestedFile, 'Home/') === 0) {
         $requestedFile = substr($requestedFile, 5);
     }
+    
     $filePath = realpath($baseDir . '/' . $requestedFile);
-
-    if ($filePath === false || strpos($filePath, $baseDir) !== 0 || !file_exists($filePath)) {
-        log_debug("File not found or access denied: " . ($filePath ?: "Invalid path") . " (Requested: " . $_GET['file'] . ")");
+    if ($filePath === false || strpos($filePath, $baseDir) !== 0 || !is_file($filePath)) {
+        log_debug("File access denied: " . ($filePath ?: "Invalid path"));
         header("HTTP/1.1 404 Not Found");
-        echo "File not found.";
-        exit;
+        exit("File not found.");
     }
 
     $fileSize = filesize($filePath);
     $fileName = basename($filePath);
+
+    // Validate file type
+    $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+    $allowed_extensions = [
+        'pdf', 'png', 'jpg', 'jpeg', 'gif', 'heic',
+        'mp4', 'webm', 'mov', 'avi', 'mkv',
+        'txt', 'doc', 'docx'
+    ];
+    if (!in_array($ext, $allowed_extensions)) {
+        log_debug("Invalid file type requested: $ext");
+        header("HTTP/1.1 403 Forbidden");
+        exit("File type not allowed.");
+    }
 
     $mime_types = [
         'pdf' => 'application/pdf',
@@ -69,65 +83,73 @@ if (isset($_GET['action']) && $_GET['action'] === 'serve' && isset($_GET['file']
         'mov' => 'video/quicktime',
         'avi' => 'video/x-msvideo',
         'mkv' => 'video/x-matroska',
+        'txt' => 'text/plain',
+        'doc' => 'application/msword',
+        'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
-    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-    $mime = $mime_types[$ext] ?? mime_content_type($filePath) ?? 'application/octet-stream';
+    $mime = $mime_types[$ext] ?? 'application/octet-stream';
 
+    // Set proper headers
     header("Content-Type: $mime");
     header("Accept-Ranges: bytes");
-    header("Content-Length: $fileSize");
-    header("Cache-Control: private, max-age=31536000");
+    header("Cache-Control: private, max-age=3600"); // 1 hour cache
     header("X-Content-Type-Options: nosniff");
+    header("Content-Disposition: inline; filename=\"$fileName\"");
 
+    // Handle range requests
+    $start = 0;
+    $end = $fileSize - 1;
+    if (isset($_SERVER['HTTP_RANGE'])) {
+        if (!preg_match('/bytes=(\d*)-(\d*)/', $_SERVER['HTTP_RANGE'], $matches)) {
+            header("HTTP/1.1 416 Range Not Satisfiable");
+            header("Content-Range: bytes */$fileSize");
+            exit;
+        }
+
+        $start = empty($matches[1]) ? 0 : intval($matches[1]);
+        $end = empty($matches[2]) ? $fileSize - 1 : intval($matches[2]);
+
+        if ($start >= $fileSize || $end >= $fileSize || $start > $end) {
+            header("HTTP/1.1 416 Range Not Satisfiable");
+            header("Content-Range: bytes */$fileSize");
+            exit;
+        }
+
+        header("HTTP/1.1 206 Partial Content");
+        header("Content-Length: " . ($end - $start + 1));
+        header("Content-Range: bytes $start-$end/$fileSize");
+    } else {
+        header("Content-Length: $fileSize");
+    }
+
+    // Stream file with proper error handling
     $fp = fopen($filePath, 'rb');
     if ($fp === false) {
         log_debug("Failed to open file: $filePath");
         header("HTTP/1.1 500 Internal Server Error");
-        echo "Unable to serve file.";
-        exit;
+        exit("Unable to read file.");
     }
 
-    ob_clean();
+    if (fseek($fp, $start) === -1) {
+        log_debug("Failed to seek in file: $filePath");
+        fclose($fp);
+        header("HTTP/1.1 500 Internal Server Error");
+        exit("Unable to seek in file.");
+    }
 
-    if (isset($_SERVER['HTTP_RANGE'])) {
-        $range = $_SERVER['HTTP_RANGE'];
-        if (preg_match('/bytes=(\d+)-(\d*)?/', $range, $matches)) {
-            $start = (int)$matches[1];
-            $end = isset($matches[2]) && $matches[2] !== '' ? (int)$matches[2] : $fileSize - 1;
-
-            if ($start >= $fileSize || $end >= $fileSize || $start > $end) {
-                log_debug("Invalid range request: $range for file size $fileSize");
-                header("HTTP/1.1 416 Range Not Satisfiable");
-                header("Content-Range: bytes */$fileSize");
-                fclose($fp);
-                exit;
-            }
-
-            $length = $end - $start + 1;
-            header("HTTP/1.1 206 Partial Content");
-            header("Content-Length: $length");
-            header("Content-Range: bytes $start-$end/$fileSize");
-
-            fseek($fp, $start);
-            $remaining = $length;
-            while ($remaining > 0 && !feof($fp) && !connection_aborted()) {
-                $chunk = min($remaining, 8192);
-                echo fread($fp, $chunk);
-                flush();
-                $remaining -= $chunk;
-            }
-        } else {
-            log_debug("Malformed range header: $range");
-            header("HTTP/1.1 416 Range Not Satisfiable");
-            header("Content-Range: bytes */$fileSize");
-            fclose($fp);
-            exit;
+    $buffer = 8192;
+    $remaining = $end - $start + 1;
+    set_time_limit(0);
+    while ($remaining > 0 && !feof($fp) && !connection_aborted()) {
+        $readSize = min($remaining, $buffer);
+        $data = fread($fp, $readSize);
+        if ($data === false) {
+            log_debug("Failed to read from file: $filePath");
+            break;
         }
-    } else {
-        while (!feof($fp) && !connection_aborted()) {
-            echo fread($fp, 8192);
-            flush();
-        }
+        echo $data;
+        flush();
+        $remaining -= strlen($data);
     }
 
     fclose($fp);
@@ -135,91 +157,89 @@ if (isset($_GET['action']) && $_GET['action'] === 'serve' && isset($_GET['file']
     exit;
 }
 
-// Check login for page access
+// Check login status
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true || !isset($_SESSION['username'])) {
-    log_debug("Redirecting to index.php due to no login");
+    log_debug("No valid session, redirecting to login");
     header("Location: /selfhostedgdrive/index.php", true, 302);
     exit;
 }
 
-/************************************************
- * 1. Define the "Home" directory as base
- ************************************************/
+// Define base directory
 $username = $_SESSION['username'];
 $homeDirPath = "/var/www/html/webdav/users/$username/Home";
 if (!is_dir($homeDirPath)) {
-    if (!mkdir($homeDirPath, 0777, true)) {
+    if (!mkdir($homeDirPath, 0750, true)) {
         log_debug("Failed to create home directory: $homeDirPath");
         header("HTTP/1.1 500 Internal Server Error");
-        echo "Server configuration error.";
-        exit;
+        exit("Failed to initialize user directory.");
     }
     chown($homeDirPath, 'www-data');
     chgrp($homeDirPath, 'www-data');
 }
+
 $baseDir = realpath($homeDirPath);
 if ($baseDir === false) {
-    log_debug("Base directory resolution failed for: $homeDirPath");
+    log_debug("Base directory resolution failed: $homeDirPath");
     header("HTTP/1.1 500 Internal Server Error");
-    echo "Server configuration error.";
-    exit;
+    exit("Server configuration error.");
 }
-log_debug("BaseDir: $baseDir (User: $username)");
 
 // Redirect to Home if no folder specified
 if (!isset($_GET['folder'])) {
-    log_debug("No folder specified, redirecting to Home");
     header("Location: /selfhostedgdrive/explorer.php?folder=Home", true, 302);
     exit;
 }
 
-/************************************************
- * 2. Determine current folder
- ************************************************/
-$currentRel = isset($_GET['folder']) ? trim(str_replace('..', '', $_GET['folder']), '/') : 'Home';
+// Determine current folder with security checks
+$currentRel = isset($_GET['folder']) ? trim(str_replace(['..', '//'], ['', '/'], $_GET['folder']), '/') : 'Home';
 $currentDir = realpath($baseDir . '/' . $currentRel);
-log_debug("CurrentRel: $currentRel");
-log_debug("CurrentDir: " . ($currentDir ? $currentDir : "Not resolved"));
 
 if ($currentDir === false || strpos($currentDir, $baseDir) !== 0) {
-    log_debug("Invalid folder, resetting to Home");
+    log_debug("Invalid folder access attempt: $currentRel");
     $currentDir = $baseDir;
     $currentRel = 'Home';
 }
 
-/************************************************
- * Calculate Storage Usage
- ************************************************/
+// Calculate storage usage (cached)
+$cacheFile = sys_get_temp_dir() . "/storage_" . md5($username) . ".cache";
+$cacheExpiry = 300; // 5 minutes
+
 function getDirSize($dir) {
     $size = 0;
-    $items = scandir($dir);
-    foreach ($items as $item) {
-        if ($item === '.' || $item === '..') continue;
-        $path = $dir . '/' . $item;
-        if (is_dir($path)) {
-            $size += getDirSize($path);
-        } else {
-            $size += filesize($path);
+    try {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $file) {
+            if ($file->isFile()) {
+                $size += $file->getSize();
+            }
         }
+    } catch (Exception $e) {
+        log_debug("Error calculating directory size: " . $e->getMessage());
     }
     return $size;
 }
 
-$totalStorage = 10 * 1024 * 1024 * 1024; // 10 GB in bytes (configurable)
-$usedStorage = getDirSize($baseDir);
+if (!file_exists($cacheFile) || (time() - filemtime($cacheFile)) > $cacheExpiry) {
+    $usedStorage = getDirSize($baseDir);
+    file_put_contents($cacheFile, $usedStorage);
+} else {
+    $usedStorage = (int)file_get_contents($cacheFile);
+}
+
+$totalStorage = 10 * 1024 * 1024 * 1024; // 10 GB
 $usedStorageGB = round($usedStorage / (1024 * 1024 * 1024), 2);
 $totalStorageGB = round($totalStorage / (1024 * 1024 * 1024), 2);
 $storagePercentage = round(($usedStorage / $totalStorage) * 100, 2);
 
-/************************************************
- * 3. Create Folder
- ************************************************/
+// Handle folder creation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_folder'])) {
     $folderName = trim($_POST['folder_name'] ?? '');
-    if ($folderName !== '') {
+    if ($folderName !== '' && preg_match('/^[a-zA-Z0-9\-_. ]+$/', $folderName)) {
         $targetPath = $currentDir . '/' . $folderName;
         if (!file_exists($targetPath)) {
-            if (!mkdir($targetPath, 0777)) {
+            if (!mkdir($targetPath, 0750)) {
                 log_debug("Failed to create folder: $targetPath");
                 $_SESSION['error'] = "Failed to create folder.";
             } else {
@@ -233,29 +253,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_folder'])) {
     exit;
 }
 
-/************************************************
- * 4. Upload Files
- ************************************************/
+// Handle file uploads with improved chunking
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload_files'])) {
     foreach ($_FILES['upload_files']['name'] as $i => $fname) {
         if ($_FILES['upload_files']['error'][$i] === UPLOAD_ERR_OK) {
             $tmpPath = $_FILES['upload_files']['tmp_name'][$i];
             $originalName = $_POST['file_name'] ?? basename($fname);
+            
+            // Validate filename
+            if (!preg_match('/^[a-zA-Z0-9\-_. ]+$/', $originalName)) {
+                log_debug("Invalid filename: $originalName");
+                $_SESSION['error'] = "Invalid filename.";
+                continue;
+            }
+
+            // Validate file extension
+            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed_extensions)) {
+                log_debug("Invalid file type: $ext");
+                $_SESSION['error'] = "File type not allowed.";
+                continue;
+            }
+
             $dest = $currentDir . '/' . $originalName;
             $chunkStart = (int)($_POST['chunk_start'] ?? 0);
             $totalSize = (int)($_POST['total_size'] ?? filesize($tmpPath));
 
+            // Check remaining storage space
+            if ($usedStorage + $totalSize > $totalStorage) {
+                log_debug("Storage limit exceeded");
+                $_SESSION['error'] = "Storage limit exceeded.";
+                continue;
+            }
+
+            // Handle chunked upload
             $output = fopen($dest, $chunkStart === 0 ? 'wb' : 'ab');
             if (!$output) {
                 log_debug("Failed to open destination file: $dest");
-                $_SESSION['error'] = "Failed to open file for writing: $originalName";
+                $_SESSION['error'] = "Failed to process upload.";
                 continue;
             }
 
             $input = fopen($tmpPath, 'rb');
             if (!$input) {
-                log_debug("Failed to open temp file: $tmpPath");
-                $_SESSION['error'] = "Failed to read uploaded file: $originalName";
+                log_debug("Failed to read uploaded chunk: $tmpPath");
                 fclose($output);
                 continue;
             }
@@ -264,125 +305,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['upload_files'])) {
                 fseek($output, $chunkStart);
             }
 
+            $success = true;
             while (!feof($input)) {
                 $data = fread($input, 8192);
                 if ($data === false || fwrite($output, $data) === false) {
-                    log_debug("Failed to write chunk for $originalName at offset $chunkStart");
-                    $_SESSION['error'] = "Failed to write chunk for $originalName";
-                    fclose($input);
-                    fclose($output);
-                    unlink($dest);
-                    continue 2;
+                    $success = false;
+                    break;
                 }
             }
 
             fclose($input);
             fclose($output);
 
-            chown($dest, 'www-data');
-            chgrp($dest, 'www-data');
-            chmod($dest, 0664);
-            log_debug("Uploaded chunk for: $dest at offset $chunkStart");
+            if (!$success) {
+                log_debug("Failed to write chunk for $originalName");
+                unlink($dest);
+                $_SESSION['error'] = "Upload failed.";
+                continue;
+            }
 
+            // Verify final file
             if (filesize($dest) >= $totalSize) {
-                log_debug("Completed upload for: $dest");
+                chown($dest, 'www-data');
+                chgrp($dest, 'www-data');
+                chmod($dest, 0640);
+                log_debug("Completed upload: $dest");
+                
+                // Update storage cache
+                if (file_exists($cacheFile)) {
+                    $usedStorage += $totalSize;
+                    file_put_contents($cacheFile, $usedStorage);
+                }
             }
         } else {
             $errorMsg = match ($_FILES['upload_files']['error'][$i]) {
-                UPLOAD_ERR_INI_SIZE => "File too large (exceeds upload_max_filesize)",
-                UPLOAD_ERR_FORM_SIZE => "File too large (exceeds form max size)",
-                UPLOAD_ERR_PARTIAL => "File upload was partial",
-                UPLOAD_ERR_NO_FILE => "No file was uploaded",
-                UPLOAD_ERR_NO_TMP_DIR => "Missing temporary directory",
-                UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk",
-                UPLOAD_ERR_EXTENSION => "File upload stopped by extension",
+                UPLOAD_ERR_INI_SIZE => "File exceeds upload_max_filesize",
+                UPLOAD_ERR_FORM_SIZE => "File exceeds MAX_FILE_SIZE",
+                UPLOAD_ERR_PARTIAL => "Partial upload",
+                UPLOAD_ERR_NO_FILE => "No file uploaded",
+                UPLOAD_ERR_NO_TMP_DIR => "Missing temporary folder",
+                UPLOAD_ERR_CANT_WRITE => "Failed to write file",
+                UPLOAD_ERR_EXTENSION => "Upload stopped by extension",
                 default => "Unknown upload error"
             };
             log_debug("Upload error for $fname: $errorMsg");
-            $_SESSION['error'] = "Upload error for $fname: $errorMsg";
+            $_SESSION['error'] = $errorMsg;
         }
     }
     header("Location: /selfhostedgdrive/explorer.php?folder=" . urlencode($currentRel), true, 302);
     exit;
 }
 
-/************************************************
- * 5. Delete an item (folder or file)
- ************************************************/
+// Handle item deletion
 if (isset($_GET['delete']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $itemToDelete = $_GET['delete'];
-    $targetPath = realpath($currentDir . '/' . $itemToDelete);
-
-    if ($targetPath && strpos($targetPath, $currentDir) === 0) {
-        if (is_dir($targetPath)) {
-            deleteRecursive($targetPath);
-            log_debug("Deleted folder: $targetPath");
-        } elseif (unlink($targetPath)) {
-            log_debug("Deleted file: $targetPath");
-        } else {
-            log_debug("Failed to delete item: $targetPath");
-        }
-    }
-    header("Location: /selfhostedgdrive/explorer.php?folder=" . urlencode($currentRel), true, 302);
-    exit;
-}
-
-/************************************************
- * 6. Recursively delete a folder
- ************************************************/
-function deleteRecursive($dirPath) {
-    $items = scandir($dirPath);
-    foreach ($items as $item) {
-        if ($item === '.' || $item === '..') continue;
-        $full = $dirPath . '/' . $item;
-        if (is_dir($full)) {
-            deleteRecursive($full);
-        } else {
-            unlink($full);
-        }
-    }
-    rmdir($dirPath);
-}
-
-/************************************************
- * 7. Rename a folder
- ************************************************/
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rename_folder'])) {
-    $oldFolderName = $_POST['old_folder_name'] ?? '';
-    $newFolderName = $_POST['new_folder_name'] ?? '';
-    $oldPath = realpath($currentDir . '/' . $oldFolderName);
-
-    if ($oldPath && is_dir($oldPath)) {
-        $newPath = $currentDir . '/' . $newFolderName;
-        if (!file_exists($newPath) && rename($oldPath, $newPath)) {
-            log_debug("Renamed folder: $oldPath to $newPath");
-        } else {
-            log_debug("Failed to rename folder: $oldPath to $newPath");
-        }
-    }
-    header("Location: /selfhostedgdrive/explorer.php?folder=" . urlencode($currentRel), true, 302);
-    exit;
-}
-
-/************************************************
- * 8. Rename a file (prevent extension change)
- ************************************************/
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rename_file'])) {
-    $oldFileName = $_POST['old_file_name'] ?? '';
-    $newFileName = $_POST['new_file_name'] ?? '';
-    $oldFilePath = realpath($currentDir . '/' . $oldFileName);
-
-    if ($oldFilePath && is_file($oldFilePath)) {
-        $oldExt = strtolower(pathinfo($oldFileName, PATHINFO_EXTENSION));
-        $newExt = strtolower(pathinfo($newFileName, PATHINFO_EXTENSION));
-        if ($oldExt !== $newExt) {
-            $_SESSION['error'] = "Modification of file extension is not allowed.";
-        } else {
-            $newFilePath = $currentDir . '/' . $newFileName;
-            if (!file_exists($newFilePath) && rename($oldFilePath, $newFilePath)) {
-                log_debug("Renamed file: $oldFilePath to $newFilePath");
-            } else {
-                log_debug("Failed to rename file: $oldFilePath to $newFilePath");
+    if (preg_match('/^[a-zA-Z0-9\-_. ]+$/', $itemToDelete)) {
+        $targetPath = realpath($currentDir . '/' . $itemToDelete);
+        if ($targetPath && strpos($targetPath, $currentDir) === 0) {
+            if (is_dir($targetPath)) {
+                deleteRecursive($targetPath);
+                log_debug("Deleted folder: $targetPath");
+            } elseif (unlink($targetPath)) {
+                log_debug("Deleted file: $targetPath");
+                // Update storage cache
+                if (file_exists($cacheFile)) {
+                    $usedStorage -= filesize($targetPath);
+                    file_put_contents($cacheFile, $usedStorage);
+                }
             }
         }
     }
@@ -390,33 +379,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rename_file'])) {
     exit;
 }
 
-/************************************************
- * 9. Gather folders & files
- ************************************************/
+// Recursive delete function
+function deleteRecursive($dirPath) {
+    if (is_dir($dirPath)) {
+        $items = scandir($dirPath);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') continue;
+            $path = $dirPath . '/' . $item;
+            if (is_dir($path)) {
+                deleteRecursive($path);
+            } else {
+                unlink($path);
+            }
+        }
+        rmdir($dirPath);
+    }
+}
+
+// Handle folder rename
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rename_folder'])) {
+    $oldName = $_POST['old_folder_name'] ?? '';
+    $newName = $_POST['new_folder_name'] ?? '';
+    
+    if (preg_match('/^[a-zA-Z0-9\-_. ]+$/', $oldName) && 
+        preg_match('/^[a-zA-Z0-9\-_. ]+$/', $newName)) {
+        
+        $oldPath = realpath($currentDir . '/' . $oldName);
+        if ($oldPath && is_dir($oldPath) && strpos($oldPath, $currentDir) === 0) {
+            $newPath = $currentDir . '/' . $newName;
+            if (!file_exists($newPath) && rename($oldPath, $newPath)) {
+                log_debug("Renamed folder: $oldPath to $newPath");
+            }
+        }
+    }
+    header("Location: /selfhostedgdrive/explorer.php?folder=" . urlencode($currentRel), true, 302);
+    exit;
+}
+
+// Handle file rename
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rename_file'])) {
+    $oldName = $_POST['old_file_name'] ?? '';
+    $newName = $_POST['new_file_name'] ?? '';
+    
+    if (preg_match('/^[a-zA-Z0-9\-_. ]+$/', $oldName) && 
+        preg_match('/^[a-zA-Z0-9\-_. ]+$/', $newName)) {
+        
+        $oldPath = realpath($currentDir . '/' . $oldName);
+        if ($oldPath && is_file($oldPath) && strpos($oldPath, $currentDir) === 0) {
+            // Prevent extension change
+            $oldExt = strtolower(pathinfo($oldName, PATHINFO_EXTENSION));
+            $newExt = strtolower(pathinfo($newName, PATHINFO_EXTENSION));
+            if ($oldExt === $newExt) {
+                $newPath = $currentDir . '/' . $newName;
+                if (!file_exists($newPath) && rename($oldPath, $newPath)) {
+                    log_debug("Renamed file: $oldPath to $newPath");
+                }
+            }
+        }
+    }
+    header("Location: /selfhostedgdrive/explorer.php?folder=" . urlencode($currentRel), true, 302);
+    exit;
+}
+
+// List directory contents
 $folders = [];
 $files = [];
 if (is_dir($currentDir)) {
-    $all = scandir($currentDir);
-    if ($all !== false) {
-        foreach ($all as $one) {
-            if ($one === '.' || $one === '..') continue;
-            $path = $currentDir . '/' . $one;
-            if (is_dir($path)) {
-                $folders[] = $one;
-            } else {
-                $files[] = $one;
-            }
+    $items = scandir($currentDir);
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') continue;
+        $path = $currentDir . '/' . $item;
+        if (is_dir($path)) {
+            $folders[] = $item;
+        } else {
+            $files[] = $item;
         }
     }
+    sort($folders, SORT_NATURAL | SORT_FLAG_CASE);
+    sort($files, SORT_NATURAL | SORT_FLAG_CASE);
 }
-sort($folders);
-sort($files);
-log_debug("Folders: " . implode(", ", $folders));
-log_debug("Files: " . implode(", ", $files));
 
-/************************************************
- * 10. "Back" link if not at Home
- ************************************************/
+// Generate "Back" link
 $parentLink = '';
 if ($currentDir !== $baseDir) {
     $parts = explode('/', $currentRel);
@@ -425,29 +468,30 @@ if ($currentDir !== $baseDir) {
     $parentLink = '/selfhostedgdrive/explorer.php?folder=' . urlencode($parentRel);
 }
 
-/************************************************
- * 11. Helper: Decide which FA icon to show
- ************************************************/
+// Helper functions
 function getIconClass($fileName) {
     $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-    if (in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'heic'])) return 'fas fa-file-image';
-    if (in_array($ext, ['mp4', 'webm', 'mov', 'avi', 'mkv'])) return 'fas fa-file-video';
-    if ($ext === 'pdf') return 'fas fa-file-pdf';
-    if ($ext === 'exe') return 'fas fa-file-exclamation';
-    return 'fas fa-file';
+    return match($ext) {
+        'png', 'jpg', 'jpeg', 'gif', 'heic' => 'fas fa-file-image',
+        'mp4', 'webm', 'mov', 'avi', 'mkv' => 'fas fa-file-video',
+        'pdf' => 'fas fa-file-pdf',
+        'doc', 'docx' => 'fas fa-file-word',
+        'txt' => 'fas fa-file-alt',
+        default => 'fas fa-file'
+    };
 }
 
-/************************************************
- * 12. Helper: Check if file is "previewable"
- ************************************************/
 function isImage($fileName) {
     $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
     return in_array($ext, ['png', 'jpg', 'jpeg', 'gif', 'heic']);
 }
+
 function isVideo($fileName) {
     $ext = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
     return in_array($ext, ['mp4', 'webm', 'mov', 'avi', 'mkv']);
 }
+
+// The rest of your HTML and JavaScript code remains the same
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1038,28 +1082,37 @@ html, body {
 }
 
 #videoPlayerContainer {
-    position: relative;
-    width: 100%;
-    height: 100%;
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  height: auto;
+  max-height: 80vh;
+  background: var(--content-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 #videoPlayer {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border: none; /* Remove border */
+  width: 100%;
+  height: auto;
+  max-height: calc(80vh - 60px);
+  display: block;
+  background: #000;
+  object-fit: contain;
 }
 
 #videoPlayerControls {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    align-items: center;
-    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    padding: 10px;
-    z-index: 2; /* Ensure controls are above the video */
+  width: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .player-btn {
@@ -1222,8 +1275,8 @@ html, body {
 }
 
 #imagePreviewContainer img {
-  max-width: 100%; /* Ensure image doesn't exceed container width */
-  max-height: 100%; /* Ensure image doesn't exceed container height */
+  max-width: 100%; /* Ensure image doesn’t exceed container width */
+  max-height: 100%; /* Ensure image doesn’t exceed container height */
   width: auto;
   height: auto;
   object-fit: contain; /* Scale image to fit within container */
@@ -1306,15 +1359,6 @@ html, body {
 }
 
 #dropZone.active { display: flex; }
-
-#bufferedBar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.5);
-    z-index: 1;
-}
 </style>
 </head>
 <body>
@@ -1441,21 +1485,17 @@ html, body {
         <button id="nextBtn" onclick="navigatePreview(1)"><i class="fas fa-arrow-right"></i></button>
       </div>
       <span id="previewClose" onclick="closePreviewModal()"><i class="fas fa-times"></i></span>
-      <div id="videoPlayerContainer">
-        <video id="videoPlayer" preload="auto" controls>
-            <source src="" id="videoSource" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+      <div id="videoPlayerContainer" style="display: none;">
+        <video id="videoPlayer" preload="auto"></video>
         <div id="videoPlayerControls">
-            <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
-            <span id="currentTime">0:00</span>
-            <input type="range" id="seekBar" value="0" min="0" step="0.1" class="seek-slider">
-            <span id="duration">0:00</span>
-            <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
-            <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
-            <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
+          <button id="playPauseBtn" class="player-btn"><i class="fas fa-play"></i></button>
+          <span id="currentTime">0:00</span>
+          <input type="range" id="seekBar" value="0" min="0" step="0.1" class="seek-slider">
+          <span id="duration">0:00</span>
+          <button id="muteBtn" class="player-btn"><i class="fas fa-volume-up"></i></button>
+          <input type="range" id="volumeBar" value="1" min="0" max="1" step="0.01" class="volume-slider">
+          <button id="fullscreenBtn" class="player-btn"><i class="fas fa-expand"></i></button>
         </div>
-        <div id="bufferedBar"></div>
       </div>
       <div id="imagePreviewContainer" style="display: none;"></div>
       <div id="iconPreviewContainer" style="display: none;"></div>
@@ -1774,21 +1814,15 @@ function setupVideoPlayer(fileURL, fileName) {
     const muteBtn = document.getElementById('muteBtn');
     const volumeBar = document.getElementById('volumeBar');
     const fullscreenBtn = document.getElementById('fullscreenBtn');
-    const bufferedBar = document.getElementById('bufferedBar');
+    const previewModal = document.getElementById('previewModal');
 
     video.src = fileURL;
+    video.preload = 'auto';
     video.load();
 
-    // Fullscreen functionality
-    fullscreenBtn.onclick = () => {
-        if (!document.fullscreenElement) {
-            video.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
-        } else {
-            document.exitFullscreen();
-        }
-    };
+    const videoKey = `video_position_${fileName}`;
+    const savedTime = localStorage.getItem(videoKey);
+    if (savedTime) video.currentTime = parseFloat(savedTime);
 
     video.onloadedmetadata = () => {
         seekBar.max = video.duration;
@@ -1798,21 +1832,7 @@ function setupVideoPlayer(fileURL, fileName) {
     video.ontimeupdate = () => {
         seekBar.value = video.currentTime;
         currentTime.textContent = formatTime(video.currentTime);
-        // Update buffered bar
-        if (video.buffered.length > 0) {
-            const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-            const percentBuffered = (bufferedEnd / video.duration) * 100;
-            bufferedBar.style.width = percentBuffered + '%';
-        }
-    };
-
-    video.onprogress = () => {
-        // Update buffered bar on progress
-        if (video.buffered.length > 0) {
-            const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-            const percentBuffered = (bufferedEnd / video.duration) * 100;
-            bufferedBar.style.width = percentBuffered + '%';
-        }
+        localStorage.setItem(videoKey, video.currentTime);
     };
 
     playPauseBtn.onclick = () => {
@@ -1839,6 +1859,16 @@ function setupVideoPlayer(fileURL, fileName) {
         video.volume = volumeBar.value;
         video.muted = (volumeBar.value == 0);
         muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+    };
+
+    fullscreenBtn.onclick = () => {
+        if (!document.fullscreenElement) {
+            previewModal.classList.add('fullscreen');
+            previewModal.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+            previewModal.classList.remove('fullscreen');
+        }
     };
 
     video.onclick = () => playPauseBtn.click();
