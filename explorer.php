@@ -1231,8 +1231,8 @@ html, body {
 }
 
 #imagePreviewContainer img {
-  max-width: 100%; /* Ensure image doesn’t exceed container width */
-  max-height: 100%; /* Ensure image doesn’t exceed container height */
+  max-width: 100%; /* Ensure image doesn't exceed container width */
+  max-height: 100%; /* Ensure image doesn't exceed container height */
   width: auto;
   height: auto;
   object-fit: contain; /* Scale image to fit within container */
@@ -1776,6 +1776,17 @@ function setupVideoPlayer(fileURL, fileName) {
     video.preload = 'auto';
     video.load();
 
+    // Ensure the video plays in full screen correctly
+    fullscreenBtn.onclick = () => {
+        if (!document.fullscreenElement) {
+            previewModal.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    };
+
     const videoKey = `video_position_${fileName}`;
     const savedTime = localStorage.getItem(videoKey);
     if (savedTime) video.currentTime = parseFloat(savedTime);
@@ -1815,16 +1826,6 @@ function setupVideoPlayer(fileURL, fileName) {
         video.volume = volumeBar.value;
         video.muted = (volumeBar.value == 0);
         muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-    };
-
-    fullscreenBtn.onclick = () => {
-        if (!document.fullscreenElement) {
-            previewModal.classList.add('fullscreen');
-            previewModal.requestFullscreen();
-        } else {
-            document.exitFullscreen();
-            previewModal.classList.remove('fullscreen');
-        }
     };
 
     video.onclick = () => playPauseBtn.click();
