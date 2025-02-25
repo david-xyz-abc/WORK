@@ -1080,6 +1080,7 @@ html, body {
   flex-direction: column;
   padding: 10px;
   box-sizing: border-box;
+  gap: 10px; /* Add spacing between timeline and controls */
 }
 
 .timeline {
@@ -1088,17 +1089,10 @@ html, body {
   gap: 10px;
 }
 
-.bottom-controls {
+.controls-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.left-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .player-btn {
@@ -1123,17 +1117,17 @@ html, body {
   flex: 1;
   -webkit-appearance: none;
   height: 5px;
-  background: var(--border-color);
+  background: #333; /* Match the gray background in your image */
   border-radius: 5px;
   outline: none;
-  margin: 0 10px;
+  margin: 0;
 }
 
 .seek-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px;
   height: 12px;
-  background: var(--accent-red);
+  background: var(--accent-red); /* Red thumb as in your image */
   border-radius: 50%;
   cursor: pointer;
 }
@@ -1142,7 +1136,7 @@ html, body {
   -webkit-appearance: none;
   height: 5px;
   width: 80px;
-  background: var(--border-color);
+  background: #333; /* Match the gray background in your image */
   border-radius: 5px;
   outline: none;
   margin: 0 5px;
@@ -1152,7 +1146,7 @@ html, body {
   -webkit-appearance: none;
   width: 10px;
   height: 10px;
-  background: var(--accent-red);
+  background: var(--accent-red); /* Red thumb as in your image */
   border-radius: 50%;
   cursor: pointer;
 }
@@ -1162,7 +1156,7 @@ html, body {
   color: var(--text-color);
   min-width: 40px;
   text-align: center;
-  margin: 0 5px;
+  margin: 0;
 }
 
 #previewModal.fullscreen #videoPlayerContainer {
@@ -1193,17 +1187,14 @@ html, body {
 
   #videoPlayerControls {
     padding: 5px;
+    gap: 5px;
   }
 
   .timeline {
     gap: 5px;
   }
 
-  .bottom-controls {
-    margin-top: 5px;
-  }
-
-  .left-controls {
+  .controls-row {
     gap: 5px;
   }
 
