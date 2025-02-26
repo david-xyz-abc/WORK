@@ -1679,8 +1679,8 @@ html, body {
       </div>
       <span id="previewClose" onclick="closePreviewModal()"><i class="fas fa-times"></i></span>
       <div id="videoPlayerContainer" class="nex-video-player" data-src="" data-title="">
-  <!-- Video, loader, state buttons, and controls will be dynamically added via JS -->
-</div>
+        <!-- Video player content will be dynamically added via JS -->
+      </div>
       <div id="imagePreviewContainer" style="display: none;"></div>
       <div id="iconPreviewContainer" style="display: none;"></div>
     </div>
