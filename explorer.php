@@ -2061,7 +2061,7 @@ function setupVideoPlayer(fileURL, fileName) {
   `;
   videoContainer.appendChild(controls);
 
-  // Element references
+  // Element references and event handlers
   const video = videoElement;
   const fullscreen = controls.querySelector(".fullscreen-btn");
   const playPause = controls.querySelector(".play-pause");
@@ -2098,11 +2098,6 @@ function setupVideoPlayer(fileURL, fileName) {
 
   currentVol.style.width = volumeVal * 100 + "%";
 
-  // Restore saved position
-  const videoKey = `video_position_${fileName}`;
-  const savedTime = localStorage.getItem(videoKey);
-  if (savedTime) video.currentTime = parseFloat(savedTime);
-
   // Event Listeners
   video.addEventListener("loadedmetadata", canPlayInit);
   video.addEventListener("play", play);
@@ -2110,10 +2105,7 @@ function setupVideoPlayer(fileURL, fileName) {
   video.addEventListener("progress", handleProgress);
   video.addEventListener("waiting", () => loader.style.display = "unset");
   video.addEventListener("playing", () => loader.style.display = "none");
-  video.addEventListener("timeupdate", () => {
-    handleProgressBar();
-    localStorage.setItem(videoKey, video.currentTime);
-  });
+  video.addEventListener("timeupdate", handleTimeUpdate);
 
   document.addEventListener("keydown", handleShorthand);
   fullscreen.addEventListener("click", toggleFullscreen);
@@ -2124,29 +2116,18 @@ function setupVideoPlayer(fileURL, fileName) {
   document.addEventListener("mouseup", () => { mouseDownProgress = false; mouseDownVol = false; });
   document.addEventListener("mousemove", handleMousemove);
   duration.addEventListener("mouseenter", () => mouseOverDuration = true);
-  duration.addEventListener("mouseleave", () => {
-    mouseOverDuration = false;
-    hoverTime.style.width = 0;
-    hoverDuration.innerHTML = "";
-  });
+  duration.addEventListener("mouseleave", handleDurationLeave);
   videoContainer.addEventListener("click", toggleMainState);
-  videoContainer.addEventListener("fullscreenchange", () => {
-    videoContainer.classList.toggle("fullscreen", document.fullscreenElement);
-    fullscreen.querySelector('.full').style.display = document.fullscreenElement ? 'none' : 'flex';
-    fullscreen.querySelector('.contract').style.display = document.fullscreenElement ? 'flex' : 'none';
-  });
+  videoContainer.addEventListener("fullscreenchange", handleFullscreenChange);
   videoContainer.addEventListener("mouseleave", hideControls);
-  videoContainer.addEventListener("mousemove", () => {
-    controls.classList.add("show-controls");
-    hideControls();
-  });
-  controls.addEventListener("mouseenter", () => { controls.classList.add("show-controls"); isCursorOnControls = true; });
+  videoContainer.addEventListener("mousemove", handleContainerMouseMove);
+  controls.addEventListener("mouseenter", handleControlsEnter);
   controls.addEventListener("mouseleave", () => isCursorOnControls = false);
   mainState.addEventListener("click", toggleMainState);
   mainState.addEventListener("animationend", handleMainSateAnimationEnd);
   muteUnmute.addEventListener("click", toggleMuteUnmute);
   muteUnmute.addEventListener("mouseenter", () => totalVol.classList.toggle("show", !muted));
-  muteUnmute.addEventListener("mouseleave", (e) => { if (e.relatedTarget != volume) totalVol.classList.remove("show"); });
+  muteUnmute.addEventListener("mouseleave", handleMuteLeave);
   forward.addEventListener("click", handleForward);
   forwardSate.addEventListener("animationend", () => forwardSate.classList.remove("show-state", "animate-state"));
   backward.addEventListener("click", handleBackward);
@@ -2156,6 +2137,7 @@ function setupVideoPlayer(fileURL, fileName) {
   settingsBtn.addEventListener("click", () => settingMenu.classList.toggle("show-setting-menu"));
   speedButtons.forEach(btn => btn.addEventListener("click", handlePlaybackRate));
 
+  // Helper Functions
   function canPlayInit() {
     totalDuration.innerHTML = showDuration(video.duration);
     video.volume = volumeVal;
@@ -2176,16 +2158,6 @@ function setupVideoPlayer(fileURL, fileName) {
     requestAnimationFrame(watchProgress);
   }
 
-  function watchProgress() {
-    if (isPlaying) requestAnimationFrame(watchProgress);
-    handleProgressBar();
-  }
-
-  function handleProgressBar() {
-    currentTime.style.width = (video.currentTime / video.duration) * 100 + "%";
-    currentDuration.innerHTML = showDuration(video.currentTime);
-  }
-
   function pause() {
     video.pause();
     isPlaying = false;
@@ -2194,6 +2166,21 @@ function setupVideoPlayer(fileURL, fileName) {
     mainState.classList.add("show-state");
     handleMainStateIcon(`<i class="fas fa-play"></i>`);
     if (video.ended) currentTime.style.width = "100%";
+  }
+
+  function handleTimeUpdate() {
+    handleProgressBar();
+    localStorage.setItem(`video_position_${fileName}`, video.currentTime);
+  }
+
+  function watchProgress() {
+    if (isPlaying) requestAnimationFrame(watchProgress);
+    handleProgressBar();
+  }
+
+  function handleProgressBar() {
+    currentTime.style.width = (video.currentTime / video.duration) * 100 + "%";
+    currentDuration.innerHTML = showDuration(video.currentTime);
   }
 
   function navigate(e) {
@@ -2210,6 +2197,32 @@ function setupVideoPlayer(fileURL, fileName) {
     return hours > 0
       ? `${hours}:${min < 10 ? '0' : ''}${min}:${sec < 10 ? '0' : ''}${sec}`
       : `${min}:${sec < 10 ? '0' : ''}${sec}`;
+  }
+
+  function handleDurationLeave() {
+    mouseOverDuration = false;
+    hoverTime.style.width = 0;
+    hoverDuration.innerHTML = "";
+  }
+
+  function handleFullscreenChange() {
+    videoContainer.classList.toggle("fullscreen", document.fullscreenElement);
+    fullscreen.querySelector('.full').style.display = document.fullscreenElement ? 'none' : 'flex';
+    fullscreen.querySelector('.contract').style.display = document.fullscreenElement ? 'flex' : 'none';
+  }
+
+  function handleContainerMouseMove() {
+    controls.classList.add("show-controls");
+    hideControls();
+  }
+
+  function handleControlsEnter() {
+    controls.classList.add("show-controls");
+    isCursorOnControls = true;
+  }
+
+  function handleMuteLeave(e) {
+    if (e.relatedTarget != volume) totalVol.classList.remove("show");
   }
 
   function toggleMuteUnmute() {
@@ -2320,6 +2333,11 @@ function setupVideoPlayer(fileURL, fileName) {
       case "m": toggleMuteUnmute(); break;
     }
   }
+
+  // Restore saved position
+  const videoKey = `video_position_${fileName}`;
+  const savedTime = localStorage.getItem(videoKey);
+  if (savedTime) video.currentTime = parseFloat(savedTime);
 }
 
 function closePreviewModal() {
